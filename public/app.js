@@ -135,10 +135,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Authenticate & load profile
-  await authenticateUser();
-  await loadVacancies();
-  await loadResumes();
+  // Authenticate & load profile safely
+  try { await authenticateUser(); } catch (e) { console.error('Auth step error:', e); }
+  try { await loadVacancies(); } catch (e) { console.error('Vacancies load step error:', e); }
+  try { await loadResumes(); } catch (e) { console.error('Resumes load step error:', e); }
 
   // If start_param is apply_123, open vacancy apply modal directly!
   if (state.startParam && state.startParam.startsWith('apply_')) {
@@ -355,22 +355,28 @@ async function loadVacancies() {
   }
 
   // Load banners for candidates
-  loadActiveBanners();
+  try { loadActiveBanners(); } catch (_) {}
 
   const container = document.getElementById('vacancies-list');
   const search = document.getElementById('vacancy-search-input')?.value || '';
-  const category = state.selectedCategoryVacancies;
+  const category = state.selectedCategoryVacancies || 'all';
 
   try {
     const res = await fetch(`/api/vacancies?category=${encodeURIComponent(category)}&search=${encodeURIComponent(search)}`);
     const data = await res.json();
-    if (data.success) {
+    if (data && data.success && Array.isArray(data.vacancies)) {
       state.vacancies = data.vacancies;
-      document.getElementById('vacancies-count').textContent = data.vacancies.length;
+      const countBadge = document.getElementById('vacancies-count');
+      if (countBadge) countBadge.textContent = data.vacancies.length;
       renderVacanciesFeed(data.vacancies);
+    } else {
+      renderVacanciesFeed([]);
     }
   } catch (err) {
-    container.innerHTML = '<div class="profile-card"><p>Xatolik yuz berdi</p></div>';
+    console.error('loadVacancies error:', err);
+    if (container) {
+      renderVacanciesFeed([]);
+    }
   }
 }
 
@@ -686,22 +692,28 @@ async function openVacancyDetailModal(vacancyId) {
 
 // ── TAB 2: Load & Render Resumes ──────────────────────────────────────────────
 async function loadResumes() {
-  loadActiveBanners('resume-banner-carousel-container');
+  try { loadActiveBanners('resume-banner-carousel-container'); } catch (_) {}
 
   const container = document.getElementById('resumes-list');
   const search = document.getElementById('resume-search-input')?.value || '';
-  const category = state.selectedCategoryResumes;
+  const category = state.selectedCategoryResumes || 'all';
 
   try {
     const res = await fetch(`/api/resumes?category=${encodeURIComponent(category)}&search=${encodeURIComponent(search)}`);
     const data = await res.json();
-    if (data.success) {
+    if (data && data.success && Array.isArray(data.resumes)) {
       state.resumes = data.resumes;
-      document.getElementById('resumes-count').textContent = data.resumes.length;
+      const countBadge = document.getElementById('resumes-count');
+      if (countBadge) countBadge.textContent = data.resumes.length;
       renderResumesFeed(data.resumes);
+    } else {
+      renderResumesFeed([]);
     }
   } catch (err) {
-    container.innerHTML = '<div class="profile-card"><p>Xatolik yuz berdi</p></div>';
+    console.error('loadResumes error:', err);
+    if (container) {
+      renderResumesFeed([]);
+    }
   }
 }
 

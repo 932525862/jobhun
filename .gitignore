@@ -1,0 +1,6 @@
+node_modules/
+.env
+jobhunt.db
+jobhunt.db-shm
+jobhunt.db-wal
+*.log

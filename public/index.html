@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JobHunt — Korporativ Veb Ilova</title>
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <!-- Google Fonts & FontAwesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    <!-- Header with Corporate Logo -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-logo-img">
+          <img src="logo-icon.svg" alt="JobHunt Icon" class="logo-icon">
+        </div>
+        <div class="brand-info">
+          <div class="logo-text-wrap">
+            <span class="logo-job">job</span><span class="logo-hunt">hunt</span>
+          </div>
+          <span id="user-role-badge" class="badge badge-guest">Mehmon</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div id="token-display" class="token-pill" style="display: none;">
+          <i class="fa-solid fa-ticket"></i> <span id="user-tokens-count">0</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Bottom Navigation Tabs -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="vacancies">
+        <i class="fa-solid fa-briefcase"></i>
+        <span>Vakansiyalar</span>
+      </button>
+      <button class="nav-item" data-tab="resumes">
+        <i class="fa-solid fa-id-card"></i>
+        <span>Rezyumelar</span>
+      </button>
+      <button class="nav-item" data-tab="cabinet">
+        <i class="fa-solid fa-user-tie"></i>
+        <span>Kabinet</span>
+      </button>
+      <button class="nav-item" id="nav-admin-tab" data-tab="admin" style="display: none;">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Admin</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+
+      <!-- 🟢 TAB 1: Vacancies Feed -->
+      <section id="tab-vacancies" class="tab-page active">
+        <div class="search-bar-container">
+          <div class="search-input-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="vacancy-search-input" placeholder="Lavozim yoki kompaniya izlash...">
+          </div>
+        </div>
+
+        <div class="category-scroll-pills" id="vacancy-category-pills">
+          <button class="pill active" data-category="all">Barchasi</button>
+          <button class="pill" data-category="Sotuv menejeri">💼 Sotuv</button>
+          <button class="pill" data-category="Call-center operatori">📞 Call-center</button>
+          <button class="pill" data-category="Administrator">🏢 Admin</button>
+          <button class="pill" data-category="SMM mutaxassisi">📱 SMM</button>
+          <button class="pill" data-category="Dasturchi">💻 IT / Dev</button>
+          <button class="pill" data-category="Boshqa soha">⚙️ Boshqa</button>
+        </div>
+
+        <!-- 🚀 Banner Carousel Container -->
+        <div id="banner-carousel-container" class="banner-carousel-container" style="display: none;">
+          <!-- Banners will be injected here -->
+        </div>
+
+        <div class="section-title">
+          <h2><i class="fa-solid fa-bolt" style="color:#0066FF;"></i> Faol Ish E'lonlari</h2>
+          <span id="vacancies-count" class="count-badge">0</span>
+        </div>
+
+        <div id="vacancies-list" class="cards-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </section>
+
+      <!-- 🟢 TAB 2: Resumes Feed -->
+      <section id="tab-resumes" class="tab-page">
+        <div class="search-bar-container">
+          <div class="search-input-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="resume-search-input" placeholder="Rezyume yoki mutaxassislik izlash...">
+          </div>
+        </div>
+
+        <div class="category-scroll-pills" id="resume-category-pills">
+          <button class="pill active" data-category="all">Barchasi</button>
+          <button class="pill" data-category="Sotuv menejeri">💼 Sotuv</button>
+          <button class="pill" data-category="Call-center operatori">📞 Call-center</button>
+          <button class="pill" data-category="Administrator">🏢 Admin</button>
+          <button class="pill" data-category="Dasturchi">💻 Dasturchi</button>
+          <button class="pill" data-category="Boshqa soha">⚙️ Boshqa</button>
+        <!-- 🚀 Banner Carousel Container for Resumes tab -->
+        <div id="resume-banner-carousel-container" class="banner-carousel-container" style="display: none;">
+          <!-- Banners will be injected here -->
+        </div>
+
+        <div class="section-title">
+          <h2><i class="fa-solid fa-user-check" style="color:#0066FF;"></i> Nomzodlar Rezyumelari</h2>
+          <span id="resumes-count" class="count-badge">0</span>
+        </div>
+
+        <div id="resumes-list" class="cards-grid">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+        </div>
+      </section>
+
+      <!-- 🟢 TAB 3: User Cabinet (HR / Candidate / Guest) -->
+      <section id="tab-cabinet" class="tab-page">
+        <!-- 🚀 Hero Role Selection Banner — only shows in Cabinet tab -->
+        <div id="role-landing-hero" class="role-hero-banner" style="display:none;">
+          <div class="role-hero-header">
+            <div class="role-hero-logo"><img src="logo-icon.svg" alt="JobHunt"></div>
+            <div>
+              <h3>JobHunt Portaliga Xush Kelibsiz!</h3>
+              <p>Iltimos, tizimga kirish rejimini tanlang:</p>
+            </div>
+          </div>
+          <div class="role-hero-buttons">
+            <button class="role-btn hr-btn" onclick="selectUserRoleMode('hr')">
+              <i class="fa-solid fa-building-user"></i>
+              <div>
+                <strong>👔 HR bo'lib kirish</strong>
+                <small>Ish beruvchi xonasi</small>
+              </div>
+            </button>
+            <button class="role-btn candidate-btn" onclick="selectUserRoleMode('candidate')">
+              <i class="fa-solid fa-user-tie"></i>
+              <div>
+                <strong>👤 Nomzod bo'lib kirish</strong>
+                <small>Ish qidiruvchi xonasi</small>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div id="cabinet-view-container">
+          <!-- Dynamic rendering based on role -->
+        </div>
+      </section>
+
+      <!-- 🟢 TAB 4: Admin Panel -->
+      <section id="tab-admin" class="tab-page">
+        <div class="admin-subtabs">
+          <button class="subtab active" data-subtab="stats"><i class="fa-solid fa-chart-pie"></i> Statistika</button>
+          <button class="subtab" data-subtab="payments"><i class="fa-solid fa-receipt"></i> To'lovlar <span id="admin-pending-pay-badge" class="badge-dot"></span></button>
+          <button class="subtab" data-subtab="banners"><i class="fa-solid fa-image"></i> Reklamalar <span id="admin-pending-banners-badge" class="badge-dot"></span></button>
+          <button class="subtab" data-subtab="pending-vacancies"><i class="fa-solid fa-clock"></i> Vakansiyalar</button>
+          <button class="subtab" data-subtab="pending-resumes"><i class="fa-solid fa-file-circle-clock"></i> Rezyumelar</button>
+          <button class="subtab" data-subtab="settings"><i class="fa-solid fa-sliders"></i> Sozlamalar</button>
+        </div>
+
+        <div id="admin-subtab-content">
+          <!-- Subtab dynamic view -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ── MODAL CONTAINER ────────────────────────────────────────────────── -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-title">Modal Sarlavha</h3>
+        <button id="modal-close-btn" class="icon-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modal-body" class="modal-body">
+        <!-- Content -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div id="toast-container"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

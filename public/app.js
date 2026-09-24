@@ -1669,6 +1669,7 @@ async function saveVacancyEdit(event, vacancyId) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Saqlash';
+    }
   }
 }
 

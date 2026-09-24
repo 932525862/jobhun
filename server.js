@@ -20,10 +20,17 @@ const {
 const { publishVacancyToChannel, publishResumeToChannel, deactivateVacancyButton, updateChannelVacancyText } = require('./utils/channel');
 const { adminPaymentKb, adminPublishResumeTimeKb, adminVacancyKb, adminResumeKb, adminBannerKb } = require('./keyboards/admin_kb');
 
-// Create uploads directory
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+const { Telegraf } = require('telegraf');
+
+// Create uploads directory safely
+const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+const UPLOADS_DIR = isVercel ? path.join('/tmp', 'uploads') : path.join(__dirname, 'uploads');
+try {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  }
+} catch (err) {
+  console.error('Warning creating UPLOADS_DIR:', err.message);
 }
 
 // Multer storage for payment receipts and candidate application photos
@@ -42,7 +49,13 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
 
-function createServer(bot) {
+let defaultBotInstance = null;
+
+function createServer(providedBot) {
+  if (!providedBot && !defaultBotInstance && BOT_TOKEN) {
+    defaultBotInstance = new Telegraf(BOT_TOKEN);
+  }
+  const bot = providedBot || defaultBotInstance;
   const app = express();
 
   app.use(express.json({ limit: '20mb' }));

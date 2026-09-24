@@ -1,15 +1,31 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 const { ADMIN_IDS } = require('../config');
 
-const DB_PATH = path.join(__dirname, '..', 'jobhunt.db');
+function getDbPath() {
+  const isVercel = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const defaultPath = path.join(__dirname, '..', 'jobhunt.db');
+  if (isVercel) {
+    const tmpDbPath = path.join('/tmp', 'jobhunt.db');
+    if (!fs.existsSync(tmpDbPath)) {
+      if (fs.existsSync(defaultPath)) {
+        try { fs.copyFileSync(defaultPath, tmpDbPath); } catch (e) { console.error('Error copying DB:', e.message); }
+      }
+    }
+    return tmpDbPath;
+  }
+  return defaultPath;
+}
+
 let db;
 
 function getDb() {
   if (!db) {
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
+    const dbPath = getDbPath();
+    db = new Database(dbPath);
+    try { db.pragma('journal_mode = WAL'); } catch (_) {}
+    try { db.pragma('foreign_keys = ON'); } catch (_) {}
     initDb();
   }
   return db;

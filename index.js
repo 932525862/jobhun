@@ -308,10 +308,10 @@ async function main() {
   getDb();
   console.log('✅ Ma\'lumotlar bazasi tayyor');
 
-  // Express API & Web App serverini ishga tushirish
+  // Express API & Web App serverini ishga tushirish (Koyeb va barcha interfeyslar uchun 0.0.0.0)
   const app = createServer(bot);
-  const server = app.listen(PORT, () => {
-    console.log(`🌐 Express API va Telegram Web App http://localhost:${PORT} da ishga tushdi`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🌐 Express API va Telegram Web App 0.0.0.0:${PORT} da ishga tushdi`);
   });
 
   server.on('error', (err) => {

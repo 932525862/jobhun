@@ -110,6 +110,9 @@ function candidateResumeCategoryKb() {
 function candidateResumeConfirmKb() {
   return Markup.inlineKeyboard([
     [
+      Markup.button.callback('✨ AI bilan rezyumeni yaxshilash', 'res_ai_improve'),
+    ],
+    [
       Markup.button.callback('✅ Ha, to\'g\'ri', 'res_confirm_yes'),
       Markup.button.callback('✏️ Yo\'q, o\'zgartirish', 'res_confirm_no'),
     ],

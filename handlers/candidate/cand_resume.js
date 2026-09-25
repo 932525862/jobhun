@@ -260,6 +260,41 @@ async function showResumePreview(ctx) {
 // ── Step 15: Confirmation (Composer)
 const step15 = new Composer();
 
+step15.action('res_ai_improve', async (ctx) => {
+  await ctx.answerCbQuery('✨ AI matnni tahlil qilib, yaxshilamoqda...');
+
+  const resume = ctx.wizard.state.resume || {};
+  const { improveResumeText } = require('../../services/ai');
+
+  try {
+    const loadingMsg = await ctx.reply('🔄 *AI yordamida rezyume matni yaxshilanmoqda, iltimos kuting...*', { parse_mode: 'Markdown' });
+
+    if (resume.creation_type === 'manual' && resume.raw_text) {
+      resume.raw_text = await improveResumeText(resume.raw_text);
+    } else {
+      if (resume.about_me) {
+        resume.about_me = await improveResumeText(resume.about_me);
+      }
+      if (resume.experience_details) {
+        resume.experience_details = await improveResumeText(resume.experience_details);
+      }
+      if (resume.skills) {
+        resume.skills = await improveResumeText(resume.skills);
+      }
+    }
+
+    try {
+      await ctx.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id);
+    } catch (_) {}
+
+    await ctx.reply('✨ *Rezyume matni AI yordamida muvaffaqiyatli yaxshilandi!*', { parse_mode: 'Markdown' });
+    return showResumePreview(ctx);
+  } catch (err) {
+    console.error('Bot AI Resume Error:', err);
+    return ctx.reply(`⚠️ AI matnni yaxshilashda xatolik yuz berdi: ${err.message}`);
+  }
+});
+
 step15.action('res_confirm_yes', async (ctx) => {
   await ctx.answerCbQuery();
 

@@ -19,6 +19,8 @@ const {
 } = require('./utils/helpers');
 const { publishVacancyToChannel, publishResumeToChannel, deactivateVacancyButton, updateChannelVacancyText } = require('./utils/channel');
 const { adminPaymentKb, adminPublishResumeTimeKb, adminVacancyKb, adminResumeKb, adminBannerKb } = require('./keyboards/admin_kb');
+const { improveResumeText, improveVacancyText } = require('./services/ai');
+
 
 const { Telegraf } = require('telegraf');
 
@@ -148,6 +150,42 @@ function createServer(providedBot) {
       res.status(500).json({ error: err.message });
     }
   });
+
+  // ── AI Resume & Vacancy Improvement Endpoints ──────────────────────────────
+  const aiRateLimitMap = new Map();
+
+  const handleAiImprove = async (req, res, improveFn) => {
+    try {
+      const { text, userId } = req.body;
+      const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || userId || 'global';
+
+      // Rate limit check: 2 seconds per request
+      const now = Date.now();
+      const lastRequest = aiRateLimitMap.get(clientIp) || 0;
+      if (now - lastRequest < 2000) {
+        return res.status(429).json({ error: "Iltimos, ozgina kuting. So'rovlar juda tez yuborilmoqda." });
+      }
+      aiRateLimitMap.set(clientIp, now);
+
+      if (!text || typeof text !== 'string' || text.trim().length < 10) {
+        return res.status(400).json({ error: "Matn juda qisqa. AI bilan yaxshilash uchun kamida 10 ta belgi yozing." });
+      }
+
+      if (text.trim().length > 3000) {
+        return res.status(400).json({ error: "Matn juda uzun. Maksimal 3000 ta belgi yuborish mumkin." });
+      }
+
+      const improvedText = await improveFn(text.trim());
+      return res.json({ success: true, text: improvedText });
+    } catch (err) {
+      console.error('Error in AI improve:', err.message);
+      return res.status(500).json({ error: err.message || "AI matnni qayta ishlashda xatolik yuz berdi." });
+    }
+  };
+
+  app.post('/api/ai/improve-resume', (req, res) => handleAiImprove(req, res, improveResumeText));
+  app.post('/api/ai/improve-vacancy', (req, res) => handleAiImprove(req, res, improveVacancyText));
+
 
   // ── BANNERS ────────────────────────────────────────────────────────
   app.get('/api/banners/active', (req, res) => {
@@ -414,7 +452,7 @@ function createServer(providedBot) {
       const recentVacancies = db.prepare(`
         SELECT id, title, category, COALESCE(published_at, created_at, datetime('now')) as post_date
         FROM vacancies
-        WHERE hr_id = ? AND status != 'deleted'
+        WHERE hr_id = ? AND status = 'active'
           AND datetime(COALESCE(published_at, created_at, datetime('now'))) >= datetime('now', '-3 days')
       `).all(uid);
 
@@ -457,18 +495,20 @@ function createServer(providedBot) {
         const remaining = db.prepare('SELECT tokens FROM hr_companies WHERE user_id = ?').get(uid);
 
         // Notify Admins with approve/reject buttons
-        for (const adminId of ADMIN_IDS) {
-          try {
-            bot.telegram.sendMessage(
-              adminId,
-              `📌 *Yangi HR Vakansiyasi (Web App)*\n\n` +
-              `🏢 Kompaniya: ${hr.company_name} (${hr.phone})\n` +
-              `💼 Lavozim: *${title}*\n` +
-              `📂 Soha: *${category || '—'}*\n` +
-              `🔢 E'lon ID: #${vacancyId}`,
-              { parse_mode: 'Markdown', ...adminVacancyKb(vacancyId) }
-            ).catch(() => {});
-          } catch (_) {}
+        if (bot && bot.telegram) {
+          for (const adminId of ADMIN_IDS) {
+            try {
+              bot.telegram.sendMessage(
+                adminId,
+                `📌 *Yangi HR Vakansiyasi (Web App)*\n\n` +
+                `🏢 Kompaniya: ${hr.company_name} (${hr.phone})\n` +
+                `💼 Lavozim: *${title}*\n` +
+                `📂 Soha: *${category || '—'}*\n` +
+                `🔢 E'lon ID: #${vacancyId}`,
+                { parse_mode: 'Markdown', ...adminVacancyKb(vacancyId) }
+              ).catch(() => {});
+            } catch (_) {}
+          }
         }
 
         return res.json({
@@ -771,18 +811,20 @@ function createServer(providedBot) {
           } catch (_) {}
         }, 20 * 60 * 1000);
 
-        for (const adminId of ADMIN_IDS) {
-          try {
-            bot.telegram.sendMessage(
-              adminId,
-              `📄 *Yangi Nomzod Rezyumesi (Web App)*\n\n` +
-              `👤 Nomzod: ${cand.full_name} (${cand.phone})\n` +
-              `🎯 Lavozim: *${position}*\n` +
-              `📂 Soha: *${category || '—'}*\n` +
-              `🔢 Rezyume ID: #${resumeId}`,
-              { parse_mode: 'Markdown', ...adminResumeKb(resumeId) }
-            ).catch(() => {});
-          } catch (_) {}
+        if (bot && bot.telegram) {
+          for (const adminId of ADMIN_IDS) {
+            try {
+              bot.telegram.sendMessage(
+                adminId,
+                `📄 *Yangi Nomzod Rezyumesi (Web App)*\n\n` +
+                `👤 Nomzod: ${cand.full_name} (${cand.phone})\n` +
+                `🎯 Lavozim: *${position}*\n` +
+                `📂 Soha: *${category || '—'}*\n` +
+                `🔢 Rezyume ID: #${resumeId}`,
+                { parse_mode: 'Markdown', ...adminResumeKb(resumeId) }
+              ).catch(() => {});
+            } catch (_) {}
+          }
         }
 
         return res.json({
@@ -1344,6 +1386,8 @@ function createServer(providedBot) {
         banner_price_3day: getSetting('banner_price_3day') || '99000',
         banner_price_7day: getSetting('banner_price_7day') || '199000',
         banner_price_14day: getSetting('banner_price_14day') || '349000',
+        gemini_api_key: process.env.GEMINI_API_KEY || getSetting('gemini_api_key') || '',
+        gemini_model: process.env.GEMINI_MODEL || getSetting('gemini_model') || 'gemini-2.5-flash',
       };
       res.json({ success: true, settings });
     } catch (err) {

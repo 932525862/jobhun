@@ -1216,22 +1216,42 @@ function openCreateVacancyModal() {
             </div>
           </div>
           <div class="form-group">
-            <label>Asosiy Vazifalar:</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Asosiy Vazifalar:</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('vac-tasks', this, 'vacancy')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="tasks" id="vac-tasks" class="form-control" disabled placeholder="• Vazifa 1..."></textarea>
           </div>
           <div class="form-group">
-            <label>Talablar:</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Talablar:</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('vac-reqs', this, 'vacancy')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="requirements" id="vac-reqs" class="form-control" disabled placeholder="• Talab 1..."></textarea>
           </div>
           <div class="form-group">
-            <label>Sharoitlar:</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Sharoitlar:</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('vac-conds', this, 'vacancy')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="conditions" id="vac-conds" class="form-control" disabled placeholder="• Sharoit 1..."></textarea>
           </div>
         </div>
 
         <div id="vac-manual-fields" style="display: none;">
           <div class="form-group">
-            <label>Tayyor E'lon Matni:</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Tayyor E'lon Matni:</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('vac-rawtext', this, 'vacancy')">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="rawText" id="vac-rawtext" class="form-control" disabled style="min-height: 120px;" placeholder="Barcha ma'lumotlar..."></textarea>
           </div>
         </div>
@@ -1938,11 +1958,21 @@ function openCreateResumeModal() {
             </div>
           </div>
           <div class="form-group">
-            <label>O'zingiz Haqida Qisqacha:</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">O'zingiz Haqida Qisqacha:</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('res-aboutme', this)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="aboutMe" id="res-aboutme" class="form-control" disabled placeholder="Maqsadingiz va kuchli taraflaringiz..."></textarea>
           </div>
           <div class="form-group">
-            <label>Ko'nikmalar (Skills):</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Ko'nikmalar (Skills):</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('res-skills', this)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="skills" id="res-skills" class="form-control" disabled placeholder="Muzokara, CRM, MS Office..."></textarea>
             <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">1-Tap ko'nikmalarini bosib qo'shing:</div>
             <div class="quick-chips-container" style="margin-top:4px;">
@@ -1962,7 +1992,12 @@ function openCreateResumeModal() {
 
         <div id="res-manual-fields" style="display: none;">
           <div class="form-group">
-            <label>Tayyor Rezyume Matni:</label>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <label style="margin-bottom:0;">Tayyor Rezyume Matni:</label>
+              <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('res-rawtext', this)">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash
+              </button>
+            </div>
             <textarea name="rawText" id="res-rawtext" class="form-control" disabled style="min-height: 120px;" placeholder="Barcha ma'lumotlar..."></textarea>
           </div>
         </div>
@@ -2491,6 +2526,10 @@ async function loadAdminSubtabContent(subtab) {
           <div class="form-group"><label>7 Kunlik Banner Narxi (so'm):</label><input type="text" name="banner_price_7day" class="form-control" value="${escapeHtml(s.banner_price_7day || '199000')}"></div>
           <div class="form-group"><label>14 Kunlik Banner Narxi (so'm):</label><input type="text" name="banner_price_14day" class="form-control" value="${escapeHtml(s.banner_price_14day || '349000')}"></div>
 
+          <h4 style="font-size:15px; font-weight:700; margin:16px 0 12px; color:#38bdf8;">✨ AI Gemini Sozlamalari</h4>
+          <div class="form-group"><label>Gemini API Key:</label><input type="password" name="gemini_api_key" class="form-control" value="${escapeHtml(s.gemini_api_key || '')}" placeholder="AIzaSy..."></div>
+          <div class="form-group"><label>Gemini Model:</label><input type="text" name="gemini_model" class="form-control" value="${escapeHtml(s.gemini_model || 'gemini-2.5-flash')}"></div>
+
           <button type="submit" class="btn btn-primary" style="margin-top:14px;"><i class="fa-solid fa-floppy-disk"></i> Sozlamalarni Saqlash</button>
         </form>
       `;
@@ -2753,15 +2792,20 @@ function showVacancyPreview(payload) {
         showToast('✅ ' + data.message);
         await authenticateUser();
         loadHrVacanciesTab();
+        if (data.requiresPayment) {
+          setTimeout(() => {
+            openBuyTokensModal('hr');
+          }, 500);
+        }
       } else {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Tasdiqlash va Yuborish';
-        showToast(data.error || 'Xatolik', 'error');
+        showToast(data.error || 'Xatolik yuz berdi', 'error');
       }
     } catch (err) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Tasdiqlash va Yuborish';
-      showToast('Xatolik yuz berdi', 'error');
+      showToast(err.message || 'Xatolik yuz berdi', 'error');
     }
   });
 }
@@ -2772,7 +2816,10 @@ function openVacancyFieldEditor(fieldKey, fieldLabel, payload) {
 
   const editorHtml = `
     <div class="inline-edit-panel">
-      <div class="inline-edit-label"><i class="fa-solid fa-pen"></i> ${escapeHtml(fieldLabel)} ni tahrirlang:</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="inline-edit-label" style="margin-bottom:0;"><i class="fa-solid fa-pen"></i> ${escapeHtml(fieldLabel)} ni tahrirlang:</div>
+        ${isTextarea ? `<button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('field-edit-input', this, 'vacancy')"><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash</button>` : ''}
+      </div>
       ${isTextarea
         ? `<textarea id="field-edit-input" class="form-control" style="min-height:100px;">${escapeHtml(currentVal)}</textarea>`
         : `<input type="text" id="field-edit-input" class="form-control" value="${escapeHtml(currentVal)}">`
@@ -2925,15 +2972,20 @@ function showResumePreview(payload) {
         showToast('✅ ' + data.message);
         await authenticateUser();
         loadMyResumes();
+        if (data.requiresPayment) {
+          setTimeout(() => {
+            openBuyTokensModal('candidate');
+          }, 500);
+        }
       } else {
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Tasdiqlash va Saqlash';
-        showToast(data.error || 'Xatolik', 'error');
+        showToast(data.error || 'Xatolik yuz berdi', 'error');
       }
     } catch (err) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Tasdiqlash va Saqlash';
-      showToast('Xatolik yuz berdi', 'error');
+      showToast(err.message || 'Xatolik yuz berdi', 'error');
     }
   });
 }
@@ -2944,7 +2996,10 @@ function openResumeFieldEditor(fieldKey, fieldLabel, payload) {
 
   const editorHtml = `
     <div class="inline-edit-panel">
-      <div class="inline-edit-label"><i class="fa-solid fa-pen"></i> ${escapeHtml(fieldLabel)} ni tahrirlang:</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="inline-edit-label" style="margin-bottom:0;"><i class="fa-solid fa-pen"></i> ${escapeHtml(fieldLabel)} ni tahrirlang:</div>
+        ${isTextarea ? `<button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('field-edit-input', this)"><i class="fa-solid fa-wand-magic-sparkles"></i> ✨ AI bilan yaxshilash</button>` : ''}
+      </div>
       ${isTextarea
         ? `<textarea id="field-edit-input" class="form-control" style="min-height:100px;">${escapeHtml(currentVal)}</textarea>`
         : `<input type="text" id="field-edit-input" class="form-control" value="${escapeHtml(currentVal)}">`
@@ -3183,3 +3238,139 @@ async function submitCreateBanner(e) {
     btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Banner Reklamasini Yuborish';
   }
 }
+
+/* ── ✨ AI RESUME TEXT ENHANCEMENT HANDLERS ──────────────────────────── */
+let activeAiComparisonData = null;
+
+async function enhanceTextWithAI(textareaId, btnEl, type = 'resume') {
+  const inputEl = document.getElementById(textareaId);
+  if (!inputEl) {
+    showToast("Matn maydoni topilmadi", "error");
+    return;
+  }
+
+  const rawText = inputEl.value ? inputEl.value.trim() : '';
+
+  if (!rawText || rawText.length < 10) {
+    showToast("AI bilan yaxshilash uchun kamida 10 ta belgi yozing!", "error");
+    return;
+  }
+
+  if (rawText.length > 3000) {
+    showToast("Matn juda uzun. Maksimal 3000 ta belgi yuborish mumkin.", "error");
+    return;
+  }
+
+  const targetBtn = btnEl || (typeof event !== 'undefined' && event?.currentTarget);
+  let originalBtnHtml = '';
+  if (targetBtn) {
+    originalBtnHtml = targetBtn.innerHTML;
+    targetBtn.disabled = true;
+    targetBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> AI matnni tekshirmoqda...';
+  }
+
+  const endpoint = type === 'vacancy' ? '/api/ai/improve-vacancy' : '/api/ai/improve-resume';
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: rawText,
+        userId: state.user?.userId || null
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "AI bilan yaxshilashda xatolik yuz berdi");
+    }
+
+    const improvedText = data.text;
+    showAiComparisonModal(textareaId, rawText, improvedText);
+
+  } catch (err) {
+    console.error('AI Enhance Error:', err);
+    const msg = err.message || "AI xizmati hozirda javob bermadi";
+    if (msg.includes('GEMINI_API_KEY')) {
+      showToast("⚠️ AI uchun GEMINI_API_KEY sozlanmagan! .env fayliga yoki Admin paneldan Gemini API key kiriting.", "error");
+    } else {
+      showToast(msg, "error");
+    }
+  } finally {
+    if (targetBtn) {
+      targetBtn.disabled = false;
+      targetBtn.innerHTML = originalBtnHtml;
+    }
+  }
+}
+
+function showAiComparisonModal(textareaId, originalText, improvedText) {
+  activeAiComparisonData = {
+    textareaId,
+    originalText,
+    improvedText
+  };
+
+  const modalHtml = `
+    <div class="ai-comparison-container">
+      <div class="ai-compare-header">
+        <i class="fa-solid fa-wand-magic-sparkles" style="color:#00D2FF; font-size: 24px; flex-shrink: 0;"></i>
+        <div>
+          <h4>✨ AI Yordamida Matn Yaxshilandi</h4>
+          <p>Grammatika, imlo va stilistika professional ko'rinishga keltirildi:</p>
+        </div>
+      </div>
+
+      <div class="ai-compare-section">
+        <div class="ai-compare-label original-label">
+          <i class="fa-solid fa-file-lines"></i> ORIGINAL (Siz yozgan matn):
+        </div>
+        <div class="ai-compare-box original-box">${escapeHtml(originalText)}</div>
+      </div>
+
+      <div class="ai-compare-section" style="margin-top: 10px;">
+        <div class="ai-compare-label improved-label">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> AI TOMONIDAN YAXSHILANGAN:
+        </div>
+        <div class="ai-compare-box improved-box">${escapeHtml(improvedText)}</div>
+      </div>
+
+      <div class="ai-compare-actions">
+        <button type="button" class="btn btn-outline" onclick="closeAiComparisonModal()">
+          <i class="fa-solid fa-xmark"></i> Bekor qilish
+        </button>
+        <button type="button" class="btn btn-primary" onclick="acceptAiText()">
+          <i class="fa-solid fa-check"></i> Qabul qilish
+        </button>
+      </div>
+    </div>
+  `;
+
+  openModal("✨ AI Yordamida Yaxshilandi", modalHtml);
+}
+
+function acceptAiText() {
+  if (!activeAiComparisonData) return;
+  const { textareaId, improvedText } = activeAiComparisonData;
+
+  const targetEl = document.getElementById(textareaId);
+  if (targetEl) {
+    targetEl.value = improvedText;
+    targetEl.dispatchEvent(new Event('input', { bubbles: true }));
+    targetEl.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  closeModal();
+  activeAiComparisonData = null;
+  showToast("Matn AI yordamida muvaffaqiyatli yaxshilandi! ✨", "success");
+}
+
+function closeAiComparisonModal() {
+  closeModal();
+  activeAiComparisonData = null;
+}
+

@@ -236,6 +236,49 @@ step11.use(async (ctx) => {
 // ── Step 12: Confirmation Ha/Yo'q (Composer)
 const step12 = new Composer();
 
+step12.action('vac_ai_improve', async (ctx) => {
+  await ctx.answerCbQuery('✨ AI e\'lon matnini tahlil qilib, yaxshilamoqda...');
+
+  const vacancy = ctx.wizard.state.vacancy || {};
+  const { improveVacancyText } = require('../../services/ai');
+
+  try {
+    const loadingMsg = await ctx.reply('🔄 *AI yordamida e\'lon matni yaxshilanmoqda, iltimos kuting...*', { parse_mode: 'Markdown' });
+
+    if (vacancy.creation_type === 'manual' && vacancy.raw_text) {
+      vacancy.raw_text = await improveVacancyText(vacancy.raw_text);
+    } else {
+      if (vacancy.tasks) {
+        vacancy.tasks = await improveVacancyText(vacancy.tasks);
+      }
+      if (vacancy.requirements) {
+        vacancy.requirements = await improveVacancyText(vacancy.requirements);
+      }
+      if (vacancy.conditions) {
+        vacancy.conditions = await improveVacancyText(vacancy.conditions);
+      }
+    }
+
+    try {
+      await ctx.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id);
+    } catch (_) {}
+
+    const { buildVacancyText } = require('../../utils/helpers');
+    const { hrConfirmKb } = require('../../keyboards/hr_kb');
+    const previewText =
+      buildVacancyText(vacancy, false) +
+      '\n\n─────────────────────\n✨ *AI yordamida yaxshilandi! Ma\'lumotlar to\'g\'rimi?*';
+
+    await ctx.reply(previewText, {
+      parse_mode: 'Markdown',
+      ...hrConfirmKb(),
+    });
+  } catch (err) {
+    console.error('Bot AI Vacancy Error:', err);
+    await ctx.reply(`⚠️ AI matnni yaxshilashda xatolik yuz berdi: ${err.message}`);
+  }
+});
+
 step12.action('vac_confirm_yes', async (ctx) => {
   await ctx.answerCbQuery();
 

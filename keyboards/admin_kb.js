@@ -28,6 +28,7 @@ function adminSettingsKb() {
     [Markup.button.callback('💰 Nomzod Narxi', 'set_candidate_price')],
     [Markup.button.callback('🎫 Nomzod Tokenlar', 'set_candidate_tokens')],
     [Markup.button.callback('📅 Nomzod Muddat (kun)', 'set_candidate_days')],
+    [Markup.button.callback('📨 Rezyume HR-ga Yuborish Narxi', 'set_resume_send_price')],
     [Markup.button.callback('💳 Karta Raqami', 'set_card_number')],
     [Markup.button.callback('👤 Karta Egasi', 'set_card_owner')],
   ]);

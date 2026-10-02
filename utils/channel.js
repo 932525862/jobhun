@@ -86,22 +86,95 @@ async function updateChannelVacancyText(bot, vacancyId) {
 }
 
 /**
- * Kanalga nomzod rezyumesini yuboradi
+ * Rezyumeni kanalga yuborish — DISABLED.
+ * Resume yaratish, saqlash, PDF, preview va boshqa barcha resume funksiyalar
+ * o'z holicha ishlaydi. Faqat Telegram kanalga yuborish o'chirilgan.
+ *
+ * Agar kelajakda kanalga yuborishni qayta yoqish kerak bo'lsa,
+ * RESUME_CHANNEL_PUBLISH_ENABLED = true qilib qo'ying.
  */
+const RESUME_CHANNEL_PUBLISH_ENABLED = false;
+
 async function publishResumeToChannel(bot, resumeId) {
+  if (!RESUME_CHANNEL_PUBLISH_ENABLED) {
+    // Kanalga yuborish o'chirilgan. Resume faqat databaseda saqlanadi.
+    // Status ni 'active' ga o'tkazish va sanalarni belgilash (kanal xabarsiz)
+    const db = getDb();
+    const resume = db.prepare('SELECT * FROM candidate_resumes WHERE id = ?').get(resumeId);
+    if (!resume) return;
+
+    const publishedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    db.prepare(`
+      UPDATE candidate_resumes 
+      SET status = 'active', published_at = ?, expires_at = ?
+      WHERE id = ?
+    `).run(publishedAt, expiresAt, resumeId);
+
+    // Nomzodga kanal yo'q, lekin PDF ni tayyorlab yuborish
+    try {
+      const { generateResumePdfFile } = require('../services/pdf_generator');
+      const path = require('path');
+      const fs = require('fs');
+      const resumesDir = path.join(__dirname, '..', 'uploads', 'resumes');
+      if (!fs.existsSync(resumesDir)) {
+        fs.mkdirSync(resumesDir, { recursive: true });
+      }
+      const pdfPath = path.join(resumesDir, `Resume_${resume.id}_${(resume.full_name || 'candidate').replace(/\s+/g, '_')}.pdf`);
+      await generateResumePdfFile(resume, pdfPath);
+
+      if (bot && bot.telegram && fs.existsSync(pdfPath)) {
+        await bot.telegram.sendDocument(
+          resume.candidate_id,
+          { source: pdfPath, filename: `Rezyume_${resume.full_name || 'Nomzod'}.pdf` },
+          {
+            caption: `✅ *Rezyumeingiz (#${resumeId}) muvaffaqiyatli yaratildi va saqlandi!*`,
+            parse_mode: 'Markdown',
+          }
+        ).catch(() => {});
+      } else if (bot && bot.telegram) {
+        await bot.telegram.sendMessage(
+          resume.candidate_id,
+          `✅ *Rezyumeingiz (#${resumeId}) muvaffaqiyatli yaratildi va saqlandi!*`,
+          { parse_mode: 'Markdown' }
+        ).catch(() => {});
+      }
+    } catch (pdfErr) {
+      console.error('[Resume PDF Notify] Xato:', pdfErr.message);
+    }
+
+    console.log(`[Resume #${resumeId}] Saqlandi va aktivlashtirildi (kanal: o'chirilgan)`);
+    return null;
+  }
+
+  // ── Quyidagi kod faqat RESUME_CHANNEL_PUBLISH_ENABLED = true bo'lganda ishlaydi ──
   const db = getDb();
   const resume = db.prepare('SELECT * FROM candidate_resumes WHERE id = ?').get(resumeId);
   if (!resume) return;
 
   const { buildResumeChannelText } = require('./helpers');
-  const text = buildResumeChannelText(resume, true);
+  const { generateResumePdfFile } = require('../services/pdf_generator');
+  const path = require('path');
+  const fs = require('fs');
+
+  const captionText = buildResumeChannelText(resume, true);
+  const pdfPath = path.join(__dirname, '..', 'uploads', 'resumes', `Resume_${resume.id}_${(resume.full_name || 'candidate').replace(/\s+/g, '_')}.pdf`);
 
   try {
-    const msg = await bot.telegram.sendMessage(CHANNEL_ID, text, {
-      parse_mode: 'Markdown',
-    });
+    await generateResumePdfFile(resume, pdfPath);
 
-    // Muddatni hisoblash (14 kun)
+    let msg;
+    if (fs.existsSync(pdfPath)) {
+      msg = await bot.telegram.sendDocument(
+        CHANNEL_ID,
+        { source: pdfPath, filename: `Resume_${resume.full_name || 'Nomzod'}.pdf` },
+        { caption: captionText, parse_mode: 'Markdown' }
+      );
+    } else {
+      msg = await bot.telegram.sendMessage(CHANNEL_ID, captionText, { parse_mode: 'Markdown' });
+    }
+
     const publishedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -111,18 +184,28 @@ async function publishResumeToChannel(bot, resumeId) {
       WHERE id = ?
     `).run(msg.message_id, publishedAt, expiresAt, resumeId);
 
-    // Nomzodga xabar
     try {
-      await bot.telegram.sendMessage(
-        resume.candidate_id,
-        `✅ *Rezyumeingiz (#${resumeId}) kanalga joylashtirildi!*`,
-        { parse_mode: 'Markdown' }
-      );
+      if (fs.existsSync(pdfPath)) {
+        await bot.telegram.sendDocument(
+          resume.candidate_id,
+          { source: pdfPath, filename: `Rezyume_${resume.full_name || 'Nomzod'}.pdf` },
+          {
+            caption: `✅ *Rezyumeingiz (#${resumeId}) PDF formatda muvaffaqiyatli yaratildi va kanalga joylashtirildi!*`,
+            parse_mode: 'Markdown',
+          }
+        );
+      } else {
+        await bot.telegram.sendMessage(
+          resume.candidate_id,
+          `✅ *Rezyumeingiz (#${resumeId}) kanalga joylashtirildi!*`,
+          { parse_mode: 'Markdown' }
+        );
+      }
     } catch (_) {}
 
     return msg.message_id;
   } catch (err) {
-    console.error('[Publish Resume Channel] Xato:', err.message);
+    console.error('[Publish Resume Channel PDF] Xato:', err.message);
   }
 }
 

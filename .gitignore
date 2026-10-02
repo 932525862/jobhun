@@ -4,3 +4,5 @@ jobhunt.db
 jobhunt.db-shm
 jobhunt.db-wal
 *.log
+uploads/
+scratch/

@@ -163,6 +163,51 @@ function initDb() {
       created_at   TEXT DEFAULT (datetime('now')),
       FOREIGN KEY(hr_id) REFERENCES hr_companies(user_id)
     );
+
+    -- Rezyume HR-larga yuborish to'lovlari
+    CREATE TABLE IF NOT EXISTS resume_sends (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      candidate_id INTEGER NOT NULL,
+      resume_id    INTEGER NOT NULL,
+      payment_id   INTEGER DEFAULT NULL,
+      amount       TEXT DEFAULT '20000',
+      vacancy_ids  TEXT DEFAULT '[]',
+      status       TEXT DEFAULT 'pending',
+      sent_count   INTEGER DEFAULT 0,
+      created_at   TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(candidate_id) REFERENCES candidates(user_id),
+      FOREIGN KEY(resume_id) REFERENCES candidate_resumes(id)
+    );
+
+    -- Har bir HR-ga yuborilgan rezume statusi tarixi (dublikat oldini olish)
+    CREATE TABLE IF NOT EXISTS resume_send_items (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      send_id      INTEGER NOT NULL,
+      candidate_id INTEGER NOT NULL,
+      resume_id    INTEGER NOT NULL,
+      vacancy_id   INTEGER NOT NULL,
+      hr_id        INTEGER NOT NULL,
+      status       TEXT DEFAULT 'pending',
+      error_msg    TEXT DEFAULT NULL,
+      sent_at      TEXT DEFAULT NULL,
+      created_at   TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(send_id) REFERENCES resume_sends(id),
+      FOREIGN KEY(resume_id) REFERENCES candidate_resumes(id),
+      FOREIGN KEY(vacancy_id) REFERENCES vacancies(id)
+    );
+
+    -- HR nomzod kontakti ochish tarixi (duplicate tracking & access control)
+    CREATE TABLE IF NOT EXISTS contact_access (
+      id           INTEGER PRIMARY KEY AUTOINCREMENT,
+      hr_id        INTEGER NOT NULL,
+      candidate_id INTEGER NOT NULL,
+      resume_id    INTEGER NOT NULL,
+      vacancy_id   INTEGER DEFAULT NULL,
+      created_at   TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY(hr_id) REFERENCES hr_companies(user_id),
+      FOREIGN KEY(candidate_id) REFERENCES candidates(user_id),
+      FOREIGN KEY(resume_id) REFERENCES candidate_resumes(id)
+    );
   `);
 
   // Migratsiyalar (mavjud baza uchun)
@@ -175,7 +220,14 @@ function initDb() {
     { table: 'vacancies', col: 'created_at', type: "TEXT DEFAULT NULL" },
     { table: 'candidate_resumes', col: 'category', type: "TEXT DEFAULT ''" },
     { table: 'candidate_resumes', col: 'created_at', type: "TEXT DEFAULT NULL" },
+    { table: 'candidate_resumes', col: 'updated_at', type: "TEXT DEFAULT NULL" },
+    { table: 'candidate_resumes', col: 'pdf_data', type: "TEXT DEFAULT '{}'" },
     { table: 'banners', col: 'image_url', type: "TEXT DEFAULT NULL" },
+    { table: 'payments', col: 'service_type', type: "TEXT DEFAULT 'token_purchase'" },
+    { table: 'payments', col: 'target_id', type: "INTEGER DEFAULT NULL" },
+    { table: 'resume_sends', col: 'amount', type: "TEXT DEFAULT '20000'" },
+    { table: 'resume_sends', col: 'vacancy_ids', type: "TEXT DEFAULT '[]'" },
+    { table: 'hr_companies', col: 'contact_credits', type: "INTEGER DEFAULT 20" },
   ];
   for (const { table, col, type } of columnsToAdd) {
     try {
@@ -185,6 +237,7 @@ function initDb() {
   try {
     db.exec(`UPDATE vacancies SET created_at = datetime('now') WHERE created_at IS NULL`);
     db.exec(`UPDATE candidate_resumes SET created_at = datetime('now') WHERE created_at IS NULL`);
+    db.exec(`UPDATE hr_companies SET contact_credits = 20 WHERE contact_credits IS NULL`);
   } catch (_) {}
 
   // Default sozlamalar
@@ -200,6 +253,9 @@ function initDb() {
     banner_price_3day:  '99000',
     banner_price_7day:  '199000',
     banner_price_14day: '349000',
+    resume_send_price: '15000',
+    contact_pack_price: '20000',
+    contact_pack_count: '20',
   };
 
   const insertSetting = db.prepare(

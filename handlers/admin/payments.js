@@ -1,6 +1,7 @@
 const { getDb, getSetting } = require('../../database/db');
 const { publishVacancyToChannel, publishResumeToChannel } = require('../../utils/channel');
 const { addDays, FIELD_LABELS } = require('../../utils/helpers');
+const { approveResumeSendPayment } = require('../candidate/cand_cabinet');
 
 function registerPaymentHandlers(bot) {
 
@@ -20,6 +21,8 @@ function registerPaymentHandlers(bot) {
 
     if (payment.user_type === 'hr') {
       await approveHrPayment(ctx, bot, payment, db);
+    } else if (payment.user_type === 'resume_send') {
+      await approveResumeSendPayment(ctx, bot, payment, db);
     } else {
       await approveCandidatePayment(ctx, bot, payment, db);
     }
@@ -171,13 +174,29 @@ function registerPaymentHandlers(bot) {
 
   // ─── Rezyume vaqtini tanlash: Zudlik bilan ──────────────────────────────────
   bot.action(/^pub_res_now_(\d+)$/, async (ctx) => {
-    await ctx.answerCbQuery('⚡️ Kanalga joylashtirilmoqda...');
+    await ctx.answerCbQuery('⚡️ Tasdiqlashtirilmoqda...');
     const resumeId = parseInt(ctx.match[1]);
-    await publishResumeToChannel(bot, resumeId);
+    const db = getDb();
+    const publishedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    db.prepare(`
+      UPDATE candidate_resumes
+      SET status = 'active', published_at = ?, expires_at = ?
+      WHERE id = ?
+    `).run(publishedAt, expiresAt, resumeId);
+
+    const resRow = db.prepare('SELECT candidate_id FROM candidate_resumes WHERE id = ?').get(resumeId);
+    if (resRow && resRow.candidate_id) {
+      bot.telegram.sendMessage(
+        resRow.candidate_id,
+        `✅ *Rezyumeingiz (#${resumeId}) tasdiqlandi va kabinetingizda faol ko'rinadi!*`,
+        { parse_mode: 'Markdown' }
+      ).catch(() => {});
+    }
 
     try {
       await ctx.editMessageText(
-        `✅ *Rezyume (#${resumeId}) ZUDLIK BILAN kanalga joylashtirildi!*`,
+        `✅ *Rezyume (#${resumeId}) tasdiqlandi va aktivlashtirildi!*`,
         { parse_mode: 'Markdown' }
       );
     } catch (_) {}
@@ -191,15 +210,30 @@ function registerPaymentHandlers(bot) {
 
     setTimeout(async () => {
       try {
-        await publishResumeToChannel(bot, resumeId);
+        const db = getDb();
+        const publishedAt = new Date().toISOString();
+        const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+        db.prepare(`
+          UPDATE candidate_resumes
+          SET status = 'active', published_at = ?, expires_at = ?
+          WHERE id = ?
+        `).run(publishedAt, expiresAt, resumeId);
+        const resRow = db.prepare('SELECT candidate_id FROM candidate_resumes WHERE id = ?').get(resumeId);
+        if (resRow && resRow.candidate_id) {
+          await bot.telegram.sendMessage(
+            resRow.candidate_id,
+            `✅ *Rezyumeingiz (#${resumeId}) tasdiqlandi!*`,
+            { parse_mode: 'Markdown' }
+          ).catch(() => {});
+        }
       } catch (e) {
-        console.error('[Scheduled Resume Publish Error]:', e.message);
+        console.error('[Resume approve delayed]:', e.message);
       }
     }, minutes * 60 * 1000);
 
     try {
       await ctx.editMessageText(
-        `⏱ *Rezyume (#${resumeId}) ${minutes} daqiqadan so'ng kanalga joylashtiriladi.*`,
+        `⏱ *Rezyume (#${resumeId}) ${minutes} daqiqadan so'ng aktivlashtiriladi.*`,
         { parse_mode: 'Markdown' }
       );
     } catch (_) {}
@@ -314,21 +348,21 @@ async function approveCandidatePayment(ctx, bot, payment, db) {
   if (pendingResume) {
     db.prepare('UPDATE candidates SET tokens = tokens - 1 WHERE user_id = ?').run(payment.user_id);
 
-    // Default 20 minutda kanalga chiqarish
-    setTimeout(async () => {
-      try {
-        await publishResumeToChannel(bot, pendingResume.id);
-      } catch (e) {
-        console.error('[Approved Resume Schedule Error]:', e.message);
-      }
-    }, 20 * 60 * 1000);
+    // Resume ni to'lov tasdiqlangandan so'ng aktivlashtirish (kanalga emas)
+    const publishedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    db.prepare(`
+      UPDATE candidate_resumes
+      SET status = 'active', published_at = ?, expires_at = ?
+      WHERE id = ?
+    `).run(publishedAt, expiresAt, pendingResume.id);
 
     await ctx.telegram.sendMessage(
       payment.user_id,
       `✅ *To\'lovingiz tasdiqlandi!*\n\n` +
       `🎫 Tokenlar: *${tokens}* ta\n` +
       `📅 Obuna: *${days}* kun\n\n` +
-      `⏳ Rezyumeingiz *20 daqiqa* ichida kanalga joylashtiriladi.`,
+      `✅ Rezyumeingiz aktivlashtirildi va kabinetingizda ko'rinadi.`,
       { parse_mode: 'Markdown' }
     );
 

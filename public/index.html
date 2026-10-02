@@ -11,6 +11,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- html2pdf.js for client-side high-fidelity PDF Generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -29,6 +31,11 @@
         </div>
       </div>
       <div class="header-actions">
+        <!-- Language Switcher Toggle -->
+        <div class="lang-switch-wrap">
+          <button class="lang-btn active" id="lang-btn-uz" onclick="switchLanguage('uz')">UZ</button>
+          <button class="lang-btn" id="lang-btn-ru" onclick="switchLanguage('ru')">RU</button>
+        </div>
         <div id="token-display" class="token-pill" style="display: none;">
           <i class="fa-solid fa-ticket"></i> <span id="user-tokens-count">0</span>
         </div>
@@ -74,6 +81,10 @@
           <button class="pill" data-category="Administrator">🏢 Admin</button>
           <button class="pill" data-category="SMM mutaxassisi">📱 SMM</button>
           <button class="pill" data-category="Dasturchi">💻 IT / Dev</button>
+          <button class="pill" data-category="Video montajchi">🎬 Video</button>
+          <button class="pill" data-category="Savdo agenti">🚚 Agenti</button>
+          <button class="pill" data-category="Kuryer">🛵 Kuryer</button>
+          <button class="pill" data-category="O‘qituvchi">👨‍🏫 O'qituvchi</button>
           <button class="pill" data-category="Boshqa soha">⚙️ Boshqa</button>
         </div>
 
@@ -107,8 +118,14 @@
           <button class="pill" data-category="Sotuv menejeri">💼 Sotuv</button>
           <button class="pill" data-category="Call-center operatori">📞 Call-center</button>
           <button class="pill" data-category="Administrator">🏢 Admin</button>
-          <button class="pill" data-category="Dasturchi">💻 Dasturchi</button>
+          <button class="pill" data-category="SMM mutaxassisi">📱 SMM</button>
+          <button class="pill" data-category="Dasturchi">💻 IT / Dev</button>
+          <button class="pill" data-category="Video montajchi">🎬 Video</button>
+          <button class="pill" data-category="Savdo agenti">🚚 Agenti</button>
+          <button class="pill" data-category="Kuryer">🛵 Kuryer</button>
+          <button class="pill" data-category="O‘qituvchi">👨‍🏫 O'qituvchi</button>
           <button class="pill" data-category="Boshqa soha">⚙️ Boshqa</button>
+        </div>
         <!-- 🚀 Banner Carousel Container for Resumes tab -->
         <div id="resume-banner-carousel-container" class="banner-carousel-container" style="display: none;">
           <!-- Banners will be injected here -->

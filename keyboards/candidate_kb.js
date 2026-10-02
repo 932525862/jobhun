@@ -80,7 +80,16 @@ function candidateResumeDetailKb(resume) {
       Markup.button.callback('🔄 Qayta faollashtirish (1 token)', `cand_res_reactivate_${resume.id}`),
     ]);
   }
+  // Rezyumeni HR-larga yuborish (faqat aktiv rezyumlar uchun)
+  if (resume.status === 'active' || resume.status === 'pending') {
+    buttons.push([
+      Markup.button.callback('📨 HR-larga Rezyume Yuborish', `cand_res_send_hrs_${resume.id}`),
+    ]);
+  }
   if (resume.status !== 'deleted') {
+    buttons.push([
+      Markup.button.callback('✏️ Rezyumeni Tahrirlash', `cand_res_edit_${resume.id}`),
+    ]);
     buttons.push([
       Markup.button.callback('🗑 Rezyumeni o\'chirish', `cand_res_delete_${resume.id}`),
     ]);
@@ -107,6 +116,41 @@ function candidateResumeCategoryKb() {
   ]).resize();
 }
 
+function candidateLanguageKb(selectedLanguages = []) {
+  const languages = [
+    { code: 'uz', name: "O'zbekcha", flag: '🇺🇿' },
+    { code: 'ru', name: 'Ruscha', flag: '🇷🇺' },
+    { code: 'en', name: 'Inglizcha', flag: '🇬🇧' },
+    { code: 'tr', name: 'Turkcha', flag: '🇹🇷' },
+    { code: 'de', name: 'Nemischa', flag: '🇩🇪' },
+    { code: 'ko', name: 'Koreyscha', flag: '🇰🇷' },
+    { code: 'ar', name: 'Arabcha', flag: '🇸🇦' },
+    { code: 'zh', name: 'Xitoycha', flag: '🇨🇳' },
+  ];
+
+  const selectedCodes = selectedLanguages.map(sl => sl.code);
+
+  // Create language buttons in rows of 2
+  const buttons = [];
+  for (let i = 0; i < languages.length; i += 2) {
+    const row = [];
+    for (let j = i; j < Math.min(i + 2, languages.length); j++) {
+      const lang = languages[j];
+      const isSelected = selectedCodes.includes(lang.code);
+      const label = isSelected ? `✅ ${lang.flag} ${lang.name}` : `${lang.flag} ${lang.name}`;
+      row.push(Markup.button.callback(label, `lang_select_${lang.code}`));
+    }
+    buttons.push(row);
+  }
+
+  // Add confirm button if at least one language is selected
+  if (selectedLanguages.length > 0) {
+    buttons.push([Markup.button.callback('✅ Tillarni Tasdiqlash', 'lang_confirm')]);
+  }
+
+  return Markup.inlineKeyboard(buttons);
+}
+
 function candidateResumeConfirmKb() {
   return Markup.inlineKeyboard([
     [
@@ -115,6 +159,16 @@ function candidateResumeConfirmKb() {
     [
       Markup.button.callback('✅ Ha, to\'g\'ri', 'res_confirm_yes'),
       Markup.button.callback('✏️ Yo\'q, o\'zgartirish', 'res_confirm_no'),
+    ],
+  ]);
+}
+
+// Rezyumeni HR-larga yuborish tasdiqlash klaviaturasi
+function candidateResumeSendKb(resumeId) {
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.callback('✅ Ha, to\'lovga o\'tish', `cand_res_send_confirm_${resumeId}`),
+      Markup.button.callback('❌ Bekor qilish', 'cand_my_resumes'),
     ],
   ]);
 }
@@ -143,7 +197,9 @@ module.exports = {
   candidatePaymentKb,
   candidateResumeCreationTypeKb,
   candidateResumeCategoryKb,
+  candidateLanguageKb,
   candidateResumeConfirmKb,
+  candidateResumeSendKb,
   applyButtonKb,
 };
 

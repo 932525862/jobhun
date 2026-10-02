@@ -48,7 +48,7 @@ function registerSettingsHandlers(bot, stage) {
   const settingKeys = [
     'hr_price', 'hr_tokens', 'hr_days',
     'candidate_price', 'candidate_tokens', 'candidate_days',
-    'card_number', 'card_owner'
+    'resume_send_price', 'card_number', 'card_owner'
   ];
 
   for (const key of settingKeys) {
@@ -98,12 +98,18 @@ async function showSettings(ctx) {
     candidate_price: '💰 Nomzod Narxi (so\'m)',
     candidate_tokens: '🎫 Nomzod Tokenlar soni',
     candidate_days: '📅 Nomzod Obuna muddati (kun)',
+    resume_send_price: '📨 Rezyume HR-ga Yuborish Narxi (so\'m)',
     card_number: '💳 Karta Raqami',
     card_owner: '👤 Karta Egasi',
   };
 
   let text = '⚙️ *Joriy Sozlamalar:*\n\n';
-  for (const key of keys) {
+  const allKeys = [
+    'hr_price', 'hr_tokens', 'hr_days',
+    'candidate_price', 'candidate_tokens', 'candidate_days',
+    'resume_send_price', 'card_number', 'card_owner'
+  ];
+  for (const key of allKeys) {
     text += `${labels[key]}: \`${getSetting(key) || '—'}\`\n`;
   }
   text += '\n_O\'zgartirish uchun tugmani bosing:_';

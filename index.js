@@ -176,7 +176,7 @@ async function handleMenuRestore(ctx) {
   );
 }
 
-const { showCandidateCabinet, registerCandidateCabinetCallbacks } = require('./handlers/candidate/cand_cabinet');
+const { showCandidateCabinet, registerCandidateCabinetCallbacks, handleResumeEditInput, handleResumeSendPaymentCheck } = require('./handlers/candidate/cand_cabinet');
 
 bot.command('menu', handleMenuRestore);
 bot.command('kabinet', (ctx) => showCandidateCabinet(ctx));
@@ -198,6 +198,11 @@ const { handleFieldEditInput } = require('./handlers/hr/hr_cabinet');
 bot.use(async (ctx, next) => {
   if (ctx.session?.editingVacancy && ctx.message?.text) {
     const handled = await handleFieldEditInput(ctx, bot);
+    if (handled) return;
+  }
+  // ── Nomzod: Rezyume maydonini tahrirlash inputini qabul qilish ─────────────
+  if (ctx.session?.editingResume && ctx.message?.text) {
+    const handled = await handleResumeEditInput(ctx);
     if (handled) return;
   }
   return next();
@@ -260,10 +265,12 @@ bot.use(async (ctx, next) => {
     }
 
     ctx.session.waitingPubDelayResumeId = null;
+    const db = getDb();
 
     if (minutes === 0) {
+      // publishResumeToChannel - RESUME_CHANNEL_PUBLISH_ENABLED=false bo'lsa faqat DB da aktivlashtiradi
       await publishResumeToChannel(bot, resumeId);
-      await ctx.reply(`✅ *Rezyume (#${resumeId}) ZUDLIK BILAN kanalga joylashtirildi!*`, { parse_mode: 'Markdown' });
+      await ctx.reply(`✅ *Rezyume (#${resumeId}) tasdiqlandi va aktivlashtirildi!*`, { parse_mode: 'Markdown' });
     } else {
       setTimeout(async () => {
         try {
@@ -273,7 +280,7 @@ bot.use(async (ctx, next) => {
         }
       }, minutes * 60 * 1000);
 
-      await ctx.reply(`⏱ *Rezyume (#${resumeId}) ${minutes} daqiqadan so'ng kanalga joylashtiriladi!*`, { parse_mode: 'Markdown' });
+      await ctx.reply(`⏱ *Rezyume (#${resumeId}) ${minutes} daqiqadan so'ng aktivlashtiriladi!*`, { parse_mode: 'Markdown' });
     }
     return;
   }
@@ -286,7 +293,11 @@ bot.on(['photo', 'document'], async (ctx, next) => {
   const hrHandled = await handleHrPaymentCheck(ctx);
   if (hrHandled) return;
 
-  // Nomzod cheki
+  // Nomzod — Rezyume HR-ga yuborish cheki
+  const resumeSendHandled = await handleResumeSendPaymentCheck(ctx, bot);
+  if (resumeSendHandled) return;
+
+  // Nomzod — Oddiy ariza cheki
   const candHandled = await handleCandidatePaymentCheck(ctx, bot);
   if (candHandled) return;
 

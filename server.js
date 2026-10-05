@@ -1973,6 +1973,9 @@ function createServer(providedBot) {
           bot.telegram.sendMessage(vac.hr_id, '✅ *E\'loningiz kanalga joylashtirildi!*', { parse_mode: 'Markdown' }).catch(() => {});
         }
       } else {
+        // Mark as approved immediately so it disappears from the pending list
+        db.prepare("UPDATE vacancies SET status = 'approved' WHERE id = ?").run(vacancyId);
+        
         setTimeout(() => {
           publishVacancyToChannel(bot, vacancyId).catch(() => {});
         }, minutes * 60 * 1000);
@@ -2055,6 +2058,9 @@ function createServer(providedBot) {
           ).catch(() => {});
         }
       } else {
+        // Mark as approved immediately so it disappears from the pending list
+        db.prepare("UPDATE candidate_resumes SET status = 'approved' WHERE id = ?").run(resumeId);
+
         setTimeout(() => {
           const publishedAt2 = new Date().toISOString();
           const expiresAt2 = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
@@ -2134,6 +2140,9 @@ function createServer(providedBot) {
       const { settings } = req.body;
       if (settings && typeof settings === 'object') {
         for (const [k, v] of Object.entries(settings)) {
+          if (k === 'gemini_api_key' && !v) {
+            continue; // bo'sh yuborilsa o'chirmaslik uchun
+          }
           setSetting(k, String(v));
         }
       }

@@ -281,26 +281,27 @@ function registerAdminHandlers(bot, stage) {
     const db = getDb();
     const vac = db.prepare('SELECT * FROM vacancies WHERE id = ?').get(vacId);
     if (!vac || vac.status !== 'pending') {
-      return ctx.editMessageText('⚠️ Bu e\'lon allaqachon ko\'rib chiqilgan.');
+      try { await ctx.editMessageText('⚠️ Bu e\'lon allaqachon ko\'rib chiqilgan.'); } catch (_) {}
+      return;
     }
 
-    // Publish to channel immediately
-    try {
-      await publishVacancyToChannel(bot, vacId);
-    } catch (e) {
-      console.error('[vac_approve] publish error:', e.message);
-    }
+    // Faqat statusni 'approved' ga o'tkazamiz — kanalga publish KEYINROQ admin tanlagan vaqtda
+    db.prepare("UPDATE vacancies SET status = 'approved' WHERE id = ?").run(vacId);
 
-    // Notify HR
+    // HR ga tasdiqlanganlik haqida xabar
     if (vac.hr_id) {
-      bot.telegram.sendMessage(vac.hr_id, '✅ *E\'loningiz tasdiqlandi va kanalga joylashtirildi!*', { parse_mode: 'Markdown' }).catch(() => {});
+      bot.telegram.sendMessage(
+        vac.hr_id,
+        '✅ *E\'loningiz admin tomonidan tasdiqlandi!*\n\nKanalga joylashtirilish vaqti belgilanmoqda...',
+        { parse_mode: 'Markdown' }
+      ).catch(() => {});
     }
 
     try {
-      await ctx.editMessageText(`✅ TASDIQLANDI — E'lon #${vacId} kanalga joylashtirildi!`);
+      await ctx.editMessageText(`✅ TASDIQLANDI — E'lon #${vacId}`);
     } catch (_) {}
 
-    // Offer publish time options
+    // Publish vaqtini tanlash
     try {
       await ctx.reply(
         `✅ *E'lon #${vacId} tasdiqlandi!*\n\n🕒 *Kanalga qachon joylashtirilsin?*`,
@@ -336,24 +337,15 @@ function registerAdminHandlers(bot, stage) {
     const db = getDb();
     const res = db.prepare('SELECT * FROM candidate_resumes WHERE id = ?').get(resumeId);
     if (!res || res.status !== 'pending') {
-      return ctx.editMessageText('⚠️ Bu rezyume allaqachon ko\'rib chiqilgan.');
+      try { await ctx.editMessageText('⚠️ Bu rezyume allaqachon ko\'rib chiqilgan.'); } catch (_) {}
+      return;
     }
 
-    // Notify candidate
-    if (res.candidate_id) {
-      bot.telegram.sendMessage(res.candidate_id, '✅ *Rezyumeingiz tasdiqlandi va kanalga joylashtiriladi!*', { parse_mode: 'Markdown' }).catch(() => {});
-    }
+    // Rezyumeni tasdiqlash va faollashtirish (kanalga emas, faqat PDF bilan)
+    await publishResumeToChannel(bot, resumeId);
 
     try {
       await ctx.editMessageText(`✅ TASDIQLANDI — Rezyume #${resumeId}`);
-    } catch (_) {}
-
-    // Offer publish time options
-    try {
-      await ctx.reply(
-        `✅ *Rezyume #${resumeId} tasdiqlandi!*\n\n🕒 *Kanalga qachon joylashtirilsin?*`,
-        { parse_mode: 'Markdown', ...adminPublishResumeTimeKb(resumeId) }
-      );
     } catch (_) {}
   });
 

@@ -9,7 +9,16 @@ const { getDb } = require('../database/db');
 async function publishVacancyToChannel(bot, vacancyId) {
   const db = getDb();
   const vacancy = db.prepare('SELECT * FROM vacancies WHERE id = ?').get(vacancyId);
-  if (!vacancy) return;
+  if (!vacancy) {
+    console.error(`[publishVacancyToChannel] Vacancy #${vacancyId} topilmadi`);
+    return;
+  }
+
+  // Faqat pending/approved/active statusdagi vakansiyalarni kanalga chiqarish
+  if (!['pending', 'approved', 'active'].includes(vacancy.status)) {
+    console.error(`[publishVacancyToChannel] Vacancy #${vacancyId} status: ${vacancy.status} — chiqarib bo'lmaydi`);
+    return;
+  }
 
   const text = buildVacancyText(vacancy, true);
   const kb = applyButtonKb(vacancyId);
@@ -42,17 +51,19 @@ async function publishVacancyToChannel(bot, vacancyId) {
 async function deactivateVacancyButton(bot, vacancyId) {
   const db = getDb();
   const vacancy = db.prepare('SELECT * FROM vacancies WHERE id = ?').get(vacancyId);
-  if (!vacancy || !vacancy.channel_msg_id) return;
+  if (!vacancy) return;
 
-  try {
-    await bot.telegram.editMessageReplyMarkup(
-      CHANNEL_ID,
-      vacancy.channel_msg_id,
-      undefined,
-      { inline_keyboard: [] }
-    );
-  } catch (err) {
-    console.error('Tugmani o\'chirishda xato:', err.message);
+  if (vacancy.channel_msg_id) {
+    try {
+      await bot.telegram.editMessageReplyMarkup(
+        CHANNEL_ID,
+        vacancy.channel_msg_id,
+        undefined,
+        { inline_keyboard: [] }
+      );
+    } catch (err) {
+      console.error('Tugmani o\'chirishda xato:', err.message);
+    }
   }
 
   db.prepare("UPDATE vacancies SET status = 'expired' WHERE id = ?").run(vacancyId);

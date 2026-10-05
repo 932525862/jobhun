@@ -261,54 +261,40 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
 
     /* ═══════════════════════════════════ SIDEBAR ═══════════════════════════════════ */
     .pdf-sidebar {
-      width: 268px;
-      background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+      width: 275px;
+      background-color: #081122;
       color: #ffffff;
-      padding: 0;
+      padding: 30px 24px;
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
       position: relative;
     }
 
-    /* Accent line on the right edge of sidebar */
-    .pdf-sidebar::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      width: 3px;
-      height: 100%;
-      background: linear-gradient(180deg, #3b82f6 0%, #06b6d4 50%, #8b5cf6 100%);
-    }
 
     /* Photo Section */
     .pdf-photo-section {
-      padding: 28px 24px 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      margin-bottom: 24px;
     }
 
     .pdf-photo-wrapper,
     .pdf-avatar-box {
-      width: 140px;
-      height: 140px;
-      min-width: 140px;
-      min-height: 140px;
-      max-width: 140px;
-      max-height: 140px;
+      width: 150px;
+      height: 150px;
+      min-width: 150px;
+      min-height: 150px;
       border-radius: 50%;
       overflow: hidden !important;
-      border: 3px solid rgba(59, 130, 246, 0.6);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      background: #1e3a5f;
+      border: 3px solid rgba(56, 189, 248, 0.8);
+      background: #0f274d;
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto;
       flex-shrink: 0;
-      position: relative;
     }
 
     .pdf-photo-img,
@@ -336,10 +322,9 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
 
     /* Sidebar Sections */
     .pdf-sidebar-body {
-      padding: 0 22px 24px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 22px;
     }
 
     .pdf-sidebar-section {
@@ -352,68 +337,56 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
-      color: #94a3b8;
+      color: #ffffff;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      margin-bottom: 4px;
     }
 
     .pdf-sidebar-title i {
-      color: #3b82f6;
-      font-size: 12px;
-      width: 14px;
+      color: #ffffff;
+      font-size: 13px;
+      width: 16px;
+      text-align: center;
     }
 
     /* Contact Items */
     .pdf-contact-list {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .pdf-contact-item {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 11px;
-      color: #cbd5e1;
+      font-size: 11.5px;
+      color: #e2e8f0;
       word-break: break-all;
       line-height: 1.3;
     }
 
-    .pdf-contact-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      background: rgba(59, 130, 246, 0.15);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+    .pdf-contact-item i {
+      color: #38bdf8;
+      font-size: 13px;
+      width: 14px;
+      text-align: center;
     }
 
-    .pdf-contact-icon i {
-      color: #3b82f6;
-      font-size: 11px;
-    }
-
-    /* Skills */
+    /* Skills & Languages */
     .pdf-skill-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .pdf-skill-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11px;
-      color: #e2e8f0;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #f1f5f9;
+      margin-bottom: 4px;
     }
 
     .pdf-skill-name {
@@ -421,67 +394,13 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
     }
 
     .pdf-skill-percent {
-      font-size: 10px;
-      color: #64748b;
-      font-weight: 600;
-    }
-
-    .pdf-progress-bar {
-      width: 100%;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .pdf-progress-fill {
-      height: 100%;
-      border-radius: 4px;
-      background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
-    }
-
-    /* Languages */
-    .pdf-lang-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .pdf-lang-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .pdf-lang-name {
-      font-size: 11px;
-      font-weight: 500;
+      font-size: 11.5px;
       color: #e2e8f0;
     }
 
     .pdf-lang-level {
-      font-size: 9.5px;
-      color: #3b82f6;
-      font-weight: 600;
-      background: rgba(59, 130, 246, 0.15);
-      padding: 2px 8px;
-      border-radius: 10px;
-    }
-
-    .pdf-lang-dots {
-      display: flex;
-      gap: 4px;
-    }
-
-    .pdf-lang-dot {
-      width: 16px;
-      height: 4px;
-      border-radius: 2px;
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .pdf-lang-dot.active {
-      background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
+      font-size: 11.5px;
+      color: #e2e8f0;
     }
 
     /* Interests */
@@ -492,29 +411,30 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
     }
 
     .pdf-interest-chip {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      color: #cbd5e1;
-      padding: 4px 10px;
-      border-radius: 14px;
-      font-size: 10px;
-      font-weight: 500;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f1f5f9;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 400;
+      line-height: 1.5;
     }
 
     /* ═══════════════════════════════════ MAIN CONTENT ═══════════════════════════════════ */
     .pdf-main-content {
       flex: 1;
-      padding: 0;
+      padding: 30px;
       display: flex;
       flex-direction: column;
       background: #ffffff;
+      gap: 24px;
     }
 
     /* Header */
     .pdf-header-block {
-      padding: 28px 28px 20px;
-      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 16px;
     }
 
     .pdf-header-name {
@@ -529,136 +449,78 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
     .pdf-header-position {
       font-size: 14px;
       font-weight: 600;
-      color: #3b82f6;
-      margin: 0 0 14px 0;
-      letter-spacing: 0.3px;
+      color: #334155;
+      margin: 0 0 16px 0;
     }
 
     .pdf-header-stats {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 8px;
     }
 
     .pdf-stat-item {
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 6px;
-      background: #ffffff;
-      padding: 5px 12px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      font-size: 10.5px;
-      font-weight: 600;
-      color: #475569;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #1e293b;
     }
 
     .pdf-stat-item i {
-      color: #3b82f6;
-      font-size: 10px;
+      color: #334155;
+      font-size: 13px;
+      width: 14px;
+      text-align: center;
     }
 
     /* Section Wrapper */
     .pdf-sections-body {
-      padding: 20px 28px 28px;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
     }
 
     .pdf-main-section {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
     .pdf-section-title {
       display: flex;
       align-items: center;
-      gap: 10px;
-      font-size: 13px;
+      gap: 8px;
+      font-size: 14px;
       font-weight: 700;
-      color: #0f172a;
+      color: #334155;
       padding-bottom: 8px;
-      border-bottom: 2px solid #e2e8f0;
-      position: relative;
     }
 
-    .pdf-section-title::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 40px;
-      height: 2px;
-      background: linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%);
-      border-radius: 1px;
-    }
-
-    .pdf-section-icon {
-      width: 26px;
-      height: 26px;
-      border-radius: 6px;
-      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-      color: #ffffff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      flex-shrink: 0;
+    .pdf-section-title i {
+      color: #334155;
+      font-size: 14px;
     }
 
     /* About Text */
     .pdf-about-text {
-      font-size: 11px;
-      line-height: 1.7;
-      color: #475569;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #334155;
       white-space: pre-wrap;
-      padding: 10px 14px;
-      background: #f8fafc;
-      border-radius: 8px;
-      border-left: 3px solid #3b82f6;
     }
 
     /* Timeline */
     .pdf-timeline-list {
       display: flex;
       flex-direction: column;
-      gap: 0;
-      position: relative;
-      padding-left: 16px;
-    }
-
-    .pdf-timeline-list::before {
-      content: '';
-      position: absolute;
-      left: 5px;
-      top: 6px;
-      bottom: 6px;
-      width: 2px;
-      background: #e2e8f0;
+      gap: 16px;
     }
 
     .pdf-timeline-item {
       display: flex;
-      gap: 14px;
-      padding: 10px 0;
-      position: relative;
-    }
-
-    .pdf-timeline-item::before {
-      content: '';
-      position: absolute;
-      left: -14px;
-      top: 16px;
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #3b82f6;
-      border: 2px solid #ffffff;
-      box-shadow: 0 0 0 2px #3b82f6;
-      z-index: 1;
+      gap: 16px;
     }
 
     .pdf-timeline-dates {
@@ -767,14 +629,10 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
 
     /* Additional Info */
     .pdf-additional-text {
-      font-size: 11px;
-      line-height: 1.7;
-      color: #475569;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #334155;
       white-space: pre-wrap;
-      padding: 10px 14px;
-      background: #f8fafc;
-      border-radius: 8px;
-      border-left: 3px solid #8b5cf6;
     }
 
     /* Footer Watermark */
@@ -799,13 +657,11 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
       </div>
 
       <div class="pdf-sidebar-body">
-        ${(phone || telegram || city) ? `
+        ${(city) ? `
           <div class="pdf-sidebar-section">
             <div class="pdf-sidebar-title"><i class="fa-solid fa-address-book"></i> ${labels.contacts}</div>
             <div class="pdf-contact-list">
-              ${phone ? `<div class="pdf-contact-item"><div class="pdf-contact-icon"><i class="fa-solid fa-phone"></i></div> ${escapeHtml(phone)}</div>` : ''}
-              ${telegram ? `<div class="pdf-contact-item"><div class="pdf-contact-icon"><i class="fa-brands fa-telegram"></i></div> ${escapeHtml(telegram)}</div>` : ''}
-              ${city ? `<div class="pdf-contact-item"><div class="pdf-contact-icon"><i class="fa-solid fa-location-dot"></i></div> ${escapeHtml(city)}</div>` : ''}
+              <div class="pdf-contact-item"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(city)}</div>
             </div>
           </div>
         ` : ''}
@@ -815,13 +671,8 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
             <div class="pdf-sidebar-title"><i class="fa-solid fa-code"></i> ${labels.skills}</div>
             ${skillsList.map(s => `
               <div class="pdf-skill-item">
-                <div class="pdf-skill-header">
-                  <span class="pdf-skill-name">${escapeHtml(s.name)}</span>
-                  <span class="pdf-skill-percent">${s.percent}%</span>
-                </div>
-                <div class="pdf-progress-bar">
-                  <div class="pdf-progress-fill" style="width: ${s.percent}%;"></div>
-                </div>
+                <span class="pdf-skill-name">${escapeHtml(s.name)}</span>
+                <span class="pdf-skill-percent">${s.percent}%</span>
               </div>
             `).join('')}
           </div>
@@ -830,23 +681,12 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
         ${languagesList.length ? `
           <div class="pdf-sidebar-section">
             <div class="pdf-sidebar-title"><i class="fa-solid fa-language"></i> ${labels.languages}</div>
-            ${languagesList.map(l => {
-              // Create 5 dot indicators based on level
-              const totalDots = 5;
-              const activeDots = Math.round(l.percent / 20);
-              let dotsHtml = '';
-              for (let i = 0; i < totalDots; i++) {
-                dotsHtml += `<div class="pdf-lang-dot ${i < activeDots ? 'active' : ''}"></div>`;
-              }
-              return `
-              <div class="pdf-lang-item">
-                <div class="pdf-lang-header">
-                  <span class="pdf-lang-name">${escapeHtml(l.name)}</span>
-                  <span class="pdf-lang-level">${escapeHtml(l.level)}</span>
-                </div>
-                <div class="pdf-lang-dots">${dotsHtml}</div>
+            ${languagesList.map(l => `
+              <div class="pdf-skill-item">
+                <span class="pdf-skill-name">${escapeHtml(l.name)}</span>
+                <span class="pdf-lang-level">${escapeHtml(l.level)}</span>
               </div>
-            `}).join('')}
+            `).join('')}
           </div>
         ` : ''}
 
@@ -878,8 +718,7 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
         ${aboutMe ? `
           <div class="pdf-main-section">
             <div class="pdf-section-title">
-              <span class="pdf-section-icon"><i class="fa-solid fa-user"></i></span>
-              ${labels.aboutMe}
+              <i class="fa-solid fa-user"></i> ${labels.aboutMe}
             </div>
             <div class="pdf-about-text">${escapeHtml(aboutMe)}</div>
           </div>
@@ -888,8 +727,7 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
         ${workEntries.length ? `
           <div class="pdf-main-section">
             <div class="pdf-section-title">
-              <span class="pdf-section-icon"><i class="fa-solid fa-briefcase"></i></span>
-              ${labels.workExperience}
+              <i class="fa-solid fa-briefcase"></i> ${labels.workExperience}
             </div>
             <div class="pdf-timeline-list">
               ${workEntries.map(w => `
@@ -909,8 +747,7 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
         ${eduEntries.length ? `
           <div class="pdf-main-section">
             <div class="pdf-section-title">
-              <span class="pdf-section-icon"><i class="fa-solid fa-graduation-cap"></i></span>
-              ${labels.education}
+              <i class="fa-solid fa-graduation-cap"></i> ${labels.education}
             </div>
             <div class="pdf-timeline-list">
               ${eduEntries.map(e => `
@@ -929,8 +766,7 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
         ${projectEntries.length ? `
           <div class="pdf-main-section">
             <div class="pdf-section-title">
-              <span class="pdf-section-icon"><i class="fa-solid fa-laptop-code"></i></span>
-              ${labels.projects}
+              <i class="fa-solid fa-laptop-code"></i> ${labels.projects}
             </div>
             <div class="pdf-projects-list">
               ${projectEntries.map(p => `
@@ -954,10 +790,7 @@ function buildResumePdfHtml(resumeData, reqLang = 'uz') {
         ${additionalInfoStr ? `
           <div class="pdf-main-section">
             <div class="pdf-section-title">
-              <span class="pdf-section-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-                <i class="fa-solid fa-star"></i>
-              </span>
-              ${labels.additionalInfo}
+              <i class="fa-solid fa-star"></i> ${labels.additionalInfo}
             </div>
             <div class="pdf-additional-text">${escapeHtml(additionalInfoStr)}</div>
           </div>

@@ -44,14 +44,14 @@ function registerPaymentHandlers(bot) {
 
     db.prepare("UPDATE payments SET status = 'rejected' WHERE id = ?").run(paymentId);
 
-    // HR uchun vakansiyani bekor qilish
+    // HR uchun vakansiyani bekor qilish ('pending' yoki 'approved' bo'lgan)
     if (payment.user_type === 'hr') {
       const pendingVac = db.prepare(`
-        SELECT id FROM vacancies WHERE hr_id = ? AND status = 'pending'
+        SELECT id FROM vacancies WHERE hr_id = ? AND (status = 'pending' OR status = 'approved')
         ORDER BY id DESC LIMIT 1
       `).get(payment.user_id);
       if (pendingVac) {
-        db.prepare("DELETE FROM vacancies WHERE id = ?").run(pendingVac.id);
+        db.prepare("UPDATE vacancies SET status = 'rejected' WHERE id = ?").run(pendingVac.id);
       }
     }
 
@@ -98,6 +98,11 @@ function registerPaymentHandlers(bot) {
     const db = getDb();
     const vac = db.prepare('SELECT * FROM vacancies WHERE id = ?').get(vacId);
 
+    if (!vac || !['approved', 'pending', 'active'].includes(vac.status)) {
+      try { await ctx.editMessageText('⚠️ Bu e\'lon holati kanalga joylashtirish uchun mos emas.'); } catch (_) {}
+      return;
+    }
+
     await publishVacancyToChannel(bot, vacId);
 
     try {
@@ -126,6 +131,11 @@ function registerPaymentHandlers(bot) {
     const db = getDb();
     const vac = db.prepare('SELECT * FROM vacancies WHERE id = ?').get(vacId);
 
+    if (!vac || !['approved', 'pending', 'active'].includes(vac.status)) {
+      try { await ctx.editMessageText('⚠️ Bu e\'lon holati kanalga joylashtirish uchun mos emas.'); } catch (_) {}
+      return;
+    }
+
     setTimeout(async () => {
       try {
         await publishVacancyToChannel(bot, vacId);
@@ -152,7 +162,7 @@ function registerPaymentHandlers(bot) {
       try {
         await ctx.telegram.sendMessage(
           vac.hr_id,
-          `⏳ *E\'loningiz *${minutes} daqiqa* ichida kanalga joylashtiriladi.*`,
+          `⏳ *E\'loningiz ${minutes} daqiqa ichida kanalga joylashtiriladi.*`,
           { parse_mode: 'Markdown' }
         );
       } catch (_) {}
@@ -281,7 +291,7 @@ async function approveHrPayment(ctx, bot, payment, db) {
 
   db.prepare(`
     UPDATE hr_companies 
-    SET tokens = ?, is_active = 1, subscription_end = ?
+    SET tokens = tokens + ?, is_active = 1, subscription_end = ?
     WHERE user_id = ?
   `).run(tokens, subEnd, payment.user_id);
 
@@ -292,6 +302,8 @@ async function approveHrPayment(ctx, bot, payment, db) {
 
   if (pendingVac) {
     db.prepare('UPDATE hr_companies SET tokens = tokens - 1 WHERE user_id = ?').run(payment.user_id);
+    // Vakansiya statusini 'approved' ga o'tkazish (kanalga emas — admin keyin vaqt tanlaydi)
+    db.prepare("UPDATE vacancies SET status = 'approved' WHERE id = ?").run(pendingVac.id);
 
     await ctx.telegram.sendMessage(
       payment.user_id,
@@ -333,7 +345,7 @@ async function approveCandidatePayment(ctx, bot, payment, db) {
 
   db.prepare(`
     UPDATE candidates 
-    SET tokens = ?, is_active = 1, subscription_end = ?
+    SET tokens = tokens + ?, is_active = 1, subscription_end = ?
     WHERE user_id = ?
   `).run(tokens, subEnd, payment.user_id);
 
@@ -348,14 +360,8 @@ async function approveCandidatePayment(ctx, bot, payment, db) {
   if (pendingResume) {
     db.prepare('UPDATE candidates SET tokens = tokens - 1 WHERE user_id = ?').run(payment.user_id);
 
-    // Resume ni to'lov tasdiqlangandan so'ng aktivlashtirish (kanalga emas)
-    const publishedAt = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
-    db.prepare(`
-      UPDATE candidate_resumes
-      SET status = 'active', published_at = ?, expires_at = ?
-      WHERE id = ?
-    `).run(publishedAt, expiresAt, pendingResume.id);
+    // Resume ni to'lov tasdiqlangandan so'ng aktivlashtirish va PDF yuborish
+    await publishResumeToChannel(bot, pendingResume.id);
 
     await ctx.telegram.sendMessage(
       payment.user_id,
@@ -366,7 +372,6 @@ async function approveCandidatePayment(ctx, bot, payment, db) {
       { parse_mode: 'Markdown' }
     );
 
-    const { adminPublishResumeTimeKb } = require('../../keyboards/admin_kb');
     const { escapeMarkdown } = require('../../utils/helpers');
     try {
       await ctx.reply(
@@ -374,10 +379,9 @@ async function approveCandidatePayment(ctx, bot, payment, db) {
         `👤 Nomzod: *${escapeMarkdown(candidate ? candidate.full_name : '')}*\n` +
         `🎯 Lavozim: *${escapeMarkdown(pendingResume.position || '')}*\n` +
         `🔢 Rezyume ID: #${pendingResume.id}\n\n` +
-        `🕒 *Rezyume kanalga qachon joylashtirilsin? (Standart: 20 minutda)*`,
+        `✅ Rezyume faollashtirildi (kanalga yuborilmaydi).`,
         {
           parse_mode: 'Markdown',
-          ...adminPublishResumeTimeKb(pendingResume.id),
         }
       );
     } catch (_) {}

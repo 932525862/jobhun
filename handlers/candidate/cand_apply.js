@@ -200,12 +200,9 @@ function registerApplyCallbacks(bot) {
 
 // ─── Nomzod chekini qabul qilish ─────────────────────────────────────────────
 async function handleCandidatePaymentCheck(ctx) {
-  const inScene = inApplyScene(ctx);
   const hasFlag = ctx.session?.waitingCandCheck === true;
 
-  if (!inScene && !hasFlag) return false;
-
-  if (inScene && !ctx.wizard?.state?.waitingPayment) return false;
+  if (!hasFlag) return false;
 
   const photo = ctx.message?.photo;
   const doc = ctx.message?.document;
@@ -214,8 +211,8 @@ async function handleCandidatePaymentCheck(ctx) {
     : doc?.mime_type?.startsWith('image') ? doc.file_id : null;
 
   if (!fileId) {
-    if (inScene || hasFlag) await ctx.reply('❌ Iltimos, rasm yoki screenshot yuboring.');
-    return (inScene || hasFlag);
+    await ctx.reply('❌ Iltimos, rasm yoki screenshot yuboring.');
+    return true;
   }
 
   const db = getDb();

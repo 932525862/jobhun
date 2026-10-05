@@ -40,47 +40,25 @@ function downloadFile(url, destPath) {
   });
 }
 
-// ── Step 0: Creation Type Selection
+// ── Step 0: Creation Type Selection (Skipped, direct to Wizard)
 const step0 = async (ctx) => {
   ctx.wizard.state.resume = {};
-  await ctx.reply(
-    '📄 *PDF Rezyume Yaratish:*',
-    { parse_mode: 'Markdown', ...candidateResumeCreationTypeKb() }
-  );
-  return ctx.wizard.next();
-};
-
-// ── Step 1: Choice handler (Composer)
-const step1 = new Composer();
-step1.action('res_type_wizard', async (ctx) => {
-  await ctx.answerCbQuery();
   ctx.wizard.state.resume.creation_type = 'wizard';
   const db = getDb();
   const cand = db.prepare('SELECT full_name FROM candidates WHERE user_id = ?').get(ctx.from.id);
+  
   await ctx.reply(
-    `👤 *Ism va Familiyangizni kiriting:*\n_(Avvalgi: ${cand ? cand.full_name : ''})_`,
+    `📄 *Yangi Rezyume Yaratish*\n\n👤 *Ism va Familiyangizni kiriting:*\n_(Avvalgi: ${cand ? cand.full_name : ''})_`,
     { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
   );
   return ctx.wizard.selectStep(2);
-});
+};
 
-step1.action('res_type_manual', async (ctx) => {
-  await ctx.answerCbQuery();
-  ctx.wizard.state.resume.creation_type = 'manual';
-  const db = getDb();
-  const cand = db.prepare('SELECT full_name FROM candidates WHERE user_id = ?').get(ctx.from.id);
-  await ctx.reply(
-    `👤 *Ism va Familiyangizni kiriting:*\n_(Avvalgi: ${cand ? cand.full_name : ''})_`,
-    { parse_mode: 'Markdown', reply_markup: { remove_keyboard: true } }
-  );
-  return ctx.wizard.selectStep(2);
-});
-
+// ── Step 1: Choice handler (Composer) - Bypassed
+const step1 = new Composer();
 step1.use(async (ctx) => {
   if (await checkSceneCommand(ctx)) return;
-  if (ctx.message) {
-    return ctx.reply('⬆️ Iltimos, yuqoridagi tugmalardan birini tanlang:', candidateResumeCreationTypeKb());
-  }
+  return ctx.wizard.selectStep(2);
 });
 
 // ── Step 2: Full Name -> Asks for Category
@@ -692,8 +670,6 @@ step19.action('res_confirm_yes', async (ctx) => {
 
     await ctx.reply('👇 Quyidagi menyudan foydalanishingiz mumkin:', candidateMainKb());
 
-    const { adminPublishResumeTimeKb } = require('../../keyboards/admin_kb');
-
     // Admin ga bildirishnoma
     for (const adminId of ADMIN_IDS) {
       try {
@@ -703,11 +679,9 @@ step19.action('res_confirm_yes', async (ctx) => {
           `👤 Nomzod: ${cand.full_name} (${cand.phone})\n` +
           `🎯 Lavozim: *${resume.position}*\n` +
           `📂 Soha: *${resume.category || '—'}*\n` +
-          `🔢 Rezyume ID: #${resumeId}`,
-          {
-            parse_mode: 'Markdown',
-            ...adminPublishResumeTimeKb(resumeId),
-          }
+          `🔢 Rezyume ID: #${resumeId}\n\n` +
+          `✅ _Rezyume avtomatik tasdiqlandi va faollashtirildi._`,
+          { parse_mode: 'Markdown' }
         );
       } catch (e) {
         console.error('[Notify Admin Resume] Xato:', e.message);

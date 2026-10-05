@@ -50,9 +50,39 @@ const getWebAppUrl = () => process.env.WEB_APP_URL || `http://localhost:${PORT}`
 bot.start(async (ctx) => {
   const payload = ctx.startPayload || '';
   const webAppUrl = getWebAppUrl();
-  const targetUrl = payload ? `${webAppUrl}?start_param=${payload}` : webAppUrl;
   const isHttps = webAppUrl.startsWith('https://');
   const userId = ctx.from.id;
+
+  // ── Deep link: apply_<vacancyId> orqali ariza topshirish ─────────────────
+  if (payload && payload.startsWith('apply_')) {
+    const vacancyId = parseInt(payload.replace('apply_', ''));
+    if (!isNaN(vacancyId)) {
+      if (!isCandidateRegistered(userId)) {
+        // Ro'yxatdan o'tmagan — avval ro'yxatdan o'tkazamiz, keyin apply
+        ctx.session.pendingVacancyId = vacancyId;
+        ctx.session.pendingApplyAfterRegister = true;
+        return ctx.scene.enter('candidate_register');
+      }
+      // Allaqachon ro'yxatdan o'tgan
+      const db = getDb();
+      const candidate = db.prepare('SELECT * FROM candidates WHERE user_id = ?').get(userId);
+      if (!candidate.is_active || candidate.tokens <= 0) {
+        // Token yo'q — to'lov so'rash
+        ctx.session.pendingVacancyId = vacancyId;
+        const { sendPaymentInfo } = require('./handlers/hr/hr_vacancy');
+        await ctx.reply(
+          `👋 Xush kelibsiz, *${candidate.full_name}*!\n\n` +
+          `💼 Ushbu vakansiyaga ariza topshirish uchun avval obuna yoki token sotib olishingiz kerak.`,
+          { parse_mode: 'Markdown' }
+        );
+        await sendPaymentInfo(ctx, 'candidate');
+        return;
+      }
+      // Token bor — to'g'ridan-to'g'ri ariza sahnasiga o'tish
+      ctx.session.pendingVacancyId = vacancyId;
+      return ctx.scene.enter('candidate_apply');
+    }
+  }
 
   // ── Admin uchun maxsus ko'rinish ─────────────────────────────────────────
   if (isAdmin(userId)) {
@@ -74,6 +104,8 @@ bot.start(async (ctx) => {
   }
 
   // ── Oddiy foydalanuvchilar uchun Web App havolasi ─────────────────────────
+  const targetUrl = payload ? `${webAppUrl}?start_param=${payload}` : webAppUrl;
+
   if (isHttps) {
     const webAppButton = Markup.button.webApp('🚀 Web App\'ni Ochish', targetUrl);
     await ctx.reply(
@@ -89,7 +121,6 @@ bot.start(async (ctx) => {
       }
     );
   } else {
-    // HTTP URL'lar Telegram inline tugmalarida ishlamaydi — oddiy xabar yuboramiz
     await ctx.reply(
       '👋 *JobHunt — Korporativ Bandlik Portali!*\n\n' +
       '⚡ Botdagi barcha funksiyalar Telegram Web App formatiga o\'tkazildi!\n\n' +
@@ -247,7 +278,7 @@ bot.use(async (ctx, next) => {
       await ctx.reply(`⏱ *E'lon (#${vacId}) ${minutes} daqiqadan so'ng kanalga joylashtiriladi!*`, { parse_mode: 'Markdown' });
       if (vac && vac.hr_id) {
         try {
-          await bot.telegram.sendMessage(vac.hr_id, `⏳ *E\'loningiz *${minutes} daqiqa* ichida kanalga joylashtiriladi.*`, { parse_mode: 'Markdown' });
+          await bot.telegram.sendMessage(vac.hr_id, `⏳ *E\'loningiz ${minutes} daqiqa ichida kanalga joylashtiriladi.*`, { parse_mode: 'Markdown' });
         } catch (_) {}
       }
     }
@@ -265,10 +296,8 @@ bot.use(async (ctx, next) => {
     }
 
     ctx.session.waitingPubDelayResumeId = null;
-    const db = getDb();
 
     if (minutes === 0) {
-      // publishResumeToChannel - RESUME_CHANNEL_PUBLISH_ENABLED=false bo'lsa faqat DB da aktivlashtiradi
       await publishResumeToChannel(bot, resumeId);
       await ctx.reply(`✅ *Rezyume (#${resumeId}) tasdiqlandi va aktivlashtirildi!*`, { parse_mode: 'Markdown' });
     } else {
@@ -319,7 +348,7 @@ async function main() {
   getDb();
   console.log('✅ Ma\'lumotlar bazasi tayyor');
 
-  // Express API & Web App serverini ishga tushirish (Koyeb va barcha interfeyslar uchun 0.0.0.0)
+  // Express API & Web App serverini ishga tushirish
   const app = createServer(bot);
   const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`🌐 Express API va Telegram Web App 0.0.0.0:${PORT} da ishga tushdi`);
@@ -335,9 +364,10 @@ async function main() {
 
   // Telegram bot initsializatsiyasi
   try {
-    // Webhook'ni o'chirib polling rejimga o'tish (409 xatolikni oldini olish)
-    await bot.telegram.deleteWebhook({ drop_pending_updates: false });
-    console.log('🔗 Webhook o\'chirildi, polling rejimi yoqildi.');
+    // Webhook'ni tozalash — 409 xatolikni oldini olish uchun MUHIM
+    console.log('🔗 Webhook tozalanmoqda...');
+    await bot.telegram.deleteWebhook({ drop_pending_updates: true });
+    console.log('🔗 Webhook o\'chirildi, polling rejimi yoqilmoqda...');
 
     const botInfo = await bot.telegram.getMe();
 
@@ -347,7 +377,7 @@ async function main() {
       cfg.BOT_USERNAME = botInfo.username;
     }
 
-    // Bot komandalari menyusini va Web App Chat Menu Button o'rnatish
+    // Bot komandalari menyusini o'rnatish
     try {
       const webAppUrl = getWebAppUrl();
       await bot.telegram.setMyCommands([
@@ -379,18 +409,30 @@ async function main() {
     console.log(`📢 Kanal: ${process.env.CHANNEL_ID || 'belgilanmagan'}`);
     console.log(`🔗 Deep link: https://t.me/${botInfo.username}?start=apply_<vakansiyaId>`);
   } catch (err) {
-    console.error('⚠️ Telegram API ga bog\'lanishda xatolik yuz berdi (bot keyinroq qayta urinadi):', err.message);
-    // Scheduler'ni shunday ham ishga tushirish
+    console.error('⚠️ Telegram API ga bog\'lanishda xatolik:', err.message);
     try { startScheduler(bot); } catch (_) {}
   }
 
-  // Bot polling'ni DOIM ishga tushirish (getMe muvaffaqiyatli bo'lsin yoki bo'lmasin)
-  function launchBot(retryDelay = 5000) {
-    bot.launch().then(() => {
+  // Bot polling — 409 bo'lsa ham qayta urinadi, lekin eksponent bilan
+  let retryDelay = 5000;
+  function launchBot() {
+    bot.launch({
+      allowedUpdates: ['message', 'callback_query', 'inline_query', 'my_chat_member'],
+    }).then(() => {
       console.log('🔴 Bot polling to\'xtatildi.');
     }).catch((err) => {
-      console.error(`❌ Bot polling xatosi: ${err.message}. ${retryDelay / 1000} soniyadan so'ng qayta uriniladi...`);
-      setTimeout(() => launchBot(Math.min(retryDelay * 2, 60000)), retryDelay);
+      // 409 — boshqa instance bor, eski process tugashini kutamiz
+      if (err.message && err.message.includes('409')) {
+        console.error(`❌ Bot polling 409 xato: boshqa instance ishlayabdi. ${retryDelay / 1000}s kutiladi...`);
+      } else {
+        console.error(`❌ Bot polling xatosi: ${err.message}. ${retryDelay / 1000}s so'ng qayta uriniladi...`);
+      }
+      const delay = retryDelay;
+      retryDelay = Math.min(retryDelay * 2, 60000);
+      setTimeout(() => {
+        retryDelay = 5000; // reset after successful reconnect attempt
+        launchBot();
+      }, delay);
     });
     console.log('🟢 Bot polling boshlandi — xabarlar qabul qilinmoqda...');
   }
@@ -400,8 +442,9 @@ async function main() {
 
 main().catch((err) => {
   console.error('❌ Ishga tushirishda kutilmagan xato:', err.message);
+  process.exit(1);
 });
 
-process.once('SIGINT',  () => bot.stop('SIGINT'));
-process.once('SIGTERM', () => bot.stop('SIGTERM'));
-
+// Graceful shutdown
+process.once('SIGINT',  () => { console.log('SIGINT: Bot to\'xtatilmoqda...'); bot.stop('SIGINT'); process.exit(0); });
+process.once('SIGTERM', () => { console.log('SIGTERM: Bot to\'xtatilmoqda...'); bot.stop('SIGTERM'); process.exit(0); });

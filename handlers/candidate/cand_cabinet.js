@@ -503,6 +503,22 @@ async function handleResumeEditInput(ctx) {
 
   ctx.session.editingResume = null;
 
+  // Rezyume tahrirlangandan so'ng PDF variantini yangilaymiz
+  try {
+    const resume = db.prepare('SELECT * FROM candidate_resumes WHERE id = ?').get(resumeId);
+    if (resume) {
+      const { generateResumePdfFile } = require('../../services/pdf_generator');
+      const path = require('path');
+      const fs = require('fs');
+      const resumesDir = path.join(__dirname, '..', '..', 'uploads', 'resumes');
+      if (!fs.existsSync(resumesDir)) fs.mkdirSync(resumesDir, { recursive: true });
+      const pdfPath = path.join(resumesDir, `Resume_${resume.id}_${(resume.full_name || 'candidate').replace(/\s+/g, '_')}.pdf`);
+      await generateResumePdfFile(resume, pdfPath);
+    }
+  } catch (err) {
+    console.error('[Resume Edit PDF] Xato:', err.message);
+  }
+
   await ctx.reply(
     `✅ *${RESUME_FIELD_LABELS[fieldKey]} muvaffaqiyatli yangilandi!*`,
     { parse_mode: 'Markdown', ...candidateMainKb() }

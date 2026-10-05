@@ -3159,9 +3159,19 @@ function openCreateResumeModal() {
             <div class="form-group">
               <label>${t('languages_label')}</label>
               <input type="text" name="pdfLanguages" id="res-pdf-languages" class="form-control" disabled placeholder="${t('languages_placeholder')}">
+              <div class="quick-chips-container">
+                <span class="chip-item" onclick="setInputValue('res-pdf-languages', 'O\'zbek — Ona tili, Rus — C1, Ingliz — B2')">O'zbek, Rus, Ingliz</span>
+                <span class="chip-item" onclick="setInputValue('res-pdf-languages', 'O\'zbek — Ona tili, Rus — B2')">O'zbek, Rus</span>
+                <span class="chip-item" onclick="setInputValue('res-pdf-languages', 'Rus — Ona tili, Ingliz — B1')">Rus, Ingliz</span>
+              </div>
             </div>
             <div class="form-group">
-              <label>${t('projects_label')}</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label style="margin-bottom:0;">${t('projects_label')}</label>
+                <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('res-pdf-projects', this)">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> ${t('btn_ai_improve')}
+                </button>
+              </div>
               <textarea name="pdfProjects" id="res-pdf-projects" class="form-control" disabled style="min-height: 60px;" placeholder="${t('projects_placeholder')}"></textarea>
             </div>
             <div class="form-group">
@@ -3174,7 +3184,12 @@ function openCreateResumeModal() {
               <input type="text" name="pdfInterests" id="res-pdf-interests" class="form-control" disabled placeholder="${t('interests_placeholder')}">
             </div>
             <div class="form-group">
-              <label>${t('additional_info_label')}</label>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <label style="margin-bottom:0;">${t('additional_info_label')}</label>
+                <button type="button" class="btn-ai-improve" onclick="enhanceTextWithAI('res-pdf-additional', this)">
+                  <i class="fa-solid fa-wand-magic-sparkles"></i> ${t('btn_ai_improve')}
+                </button>
+              </div>
               <input type="text" name="pdfAdditional" id="res-pdf-additional" class="form-control" disabled placeholder="${t('additional_info_placeholder')}">
             </div>
           </div>
@@ -3796,7 +3811,7 @@ async function loadAdminSubtabContent(subtab) {
           <div class="form-group"><label>14 Kunlik Banner Narxi (so'm):</label><input type="text" name="banner_price_14day" class="form-control" value="${escapeHtml(s.banner_price_14day || '349000')}"></div>
 
           <h4 style="font-size:15px; font-weight:700; margin:16px 0 12px; color:#38bdf8;">✨ AI Gemini Sozlamalari</h4>
-          <div class="form-group"><label>Gemini API Key:</label><input type="password" name="gemini_api_key" class="form-control" value="${escapeHtml(s.gemini_api_key || '')}" placeholder="AIzaSy..."></div>
+          <div class="form-group"><label>Gemini API Key:</label><input type="password" name="gemini_api_key" class="form-control" value="" placeholder="${s.gemini_api_key_set ? '(Kiritilgan, o\'zgartirish uchun yozing)' : 'AIzaSy...'}"></div>
           <div class="form-group"><label>Gemini Model:</label><input type="text" name="gemini_model" class="form-control" value="${escapeHtml(s.gemini_model || 'gemini-2.5-flash')}"></div>
 
           <button type="submit" class="btn btn-primary" style="margin-top:14px;"><i class="fa-solid fa-floppy-disk"></i> Sozlamalarni Saqlash</button>
@@ -4291,28 +4306,22 @@ function generateResumePdfHtml(payload) {
           `}
         </div>
 
-        ${(phone || telegram) ? `
+        ${(payload.city) ? `
           <div class="pdf-sidebar-section">
             <div class="pdf-sidebar-title"><i class="fa-solid fa-address-book"></i> ${t('contacts')}</div>
             <div class="pdf-contact-list">
-              ${phone ? `<div class="pdf-contact-item"><i class="fa-solid fa-phone"></i> ${escapeHtml(phone)}</div>` : ''}
-              ${telegram ? `<div class="pdf-contact-item"><i class="fa-brands fa-telegram"></i> ${escapeHtml(telegram)}</div>` : ''}
+              <div class="pdf-contact-item"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(payload.city)}</div>
             </div>
           </div>
         ` : ''}
 
         ${skillsList.length ? `
           <div class="pdf-sidebar-section">
-            <div class="pdf-sidebar-title"><i class="fa-solid fa-brain"></i> ${t('skills')}</div>
+            <div class="pdf-sidebar-title"><i class="fa-solid fa-code"></i> ${t('skills')}</div>
             ${skillsList.map(s => `
               <div class="pdf-skill-item">
-                <div class="pdf-skill-info">
-                  <span class="pdf-skill-name">${escapeHtml(s.name)}</span>
-                  <span class="pdf-skill-percent">${s.percent}%</span>
-                </div>
-                <div class="pdf-skill-bar">
-                  <div class="pdf-skill-fill" style="width: ${s.percent}%;"></div>
-                </div>
+                <span class="pdf-skill-name">${escapeHtml(s.name)}</span>
+                <span class="pdf-skill-percent">${s.percent}%</span>
               </div>
             `).join('')}
           </div>
@@ -4320,16 +4329,11 @@ function generateResumePdfHtml(payload) {
 
         ${languagesList.length ? `
           <div class="pdf-sidebar-section">
-            <div class="pdf-sidebar-title"><i class="fa-solid fa-globe"></i> ${t('languages')}</div>
+            <div class="pdf-sidebar-title"><i class="fa-solid fa-language"></i> ${t('languages')}</div>
             ${languagesList.map(l => `
               <div class="pdf-skill-item">
-                <div class="pdf-skill-info">
-                  <span class="pdf-skill-name">${escapeHtml(l.name)}</span>
-                  <span class="pdf-skill-percent">${escapeHtml(l.level)}</span>
-                </div>
-                <div class="pdf-skill-bar">
-                  <div class="pdf-skill-fill" style="width: ${l.percent}%;"></div>
-                </div>
+                <span class="pdf-skill-name">${escapeHtml(l.name)}</span>
+                <span class="pdf-lang-level">${escapeHtml(l.level)}</span>
               </div>
             `).join('')}
           </div>
@@ -4348,43 +4352,27 @@ function generateResumePdfHtml(payload) {
       <!-- MAIN CONTENT (RIGHT COLUMN) -->
       <div class="pdf-main-content">
         <div class="pdf-header-block">
-          <h1 class="pdf-candidate-name">${escapeHtml(payload.fullName || payload.full_name || 'Nomzod')}</h1>
-          <div class="pdf-candidate-title">${escapeHtml(payload.position || '')}</div>
-          <div class="pdf-quick-stats">
+          <h1 class="pdf-header-name">${escapeHtml(payload.fullName || payload.full_name || 'Nomzod')}</h1>
+          <div class="pdf-header-position">${escapeHtml(payload.position || '')}</div>
+          <div class="pdf-header-stats">
             ${pData.age ? `
-              <div class="pdf-stat-box">
-                <i class="fa-solid fa-cake-candles"></i>
-                <div>
-                  <span class="pdf-stat-label">${t('age')}</span>
-                  <span class="pdf-stat-val">${escapeHtml(pData.age)}</span>
-                </div>
+              <div class="pdf-stat-item">
+                <i class="fa-solid fa-cake-candles"></i> ${t('age')}: ${escapeHtml(pData.age)}
               </div>
             ` : ''}
             ${(payload.experienceYears || payload.experience_years) ? `
-              <div class="pdf-stat-box">
-                <i class="fa-solid fa-briefcase"></i>
-                <div>
-                  <span class="pdf-stat-label">${t('experience')}</span>
-                  <span class="pdf-stat-val">${escapeHtml(payload.experienceYears || payload.experience_years)}</span>
-                </div>
+              <div class="pdf-stat-item">
+                <i class="fa-solid fa-briefcase"></i> ${t('experience')}: ${escapeHtml(payload.experienceYears || payload.experience_years)}
               </div>
             ` : ''}
             ${(payload.employmentType || payload.employment_type) ? `
-              <div class="pdf-stat-box">
-                <i class="fa-solid fa-user-graduate"></i>
-                <div>
-                  <span class="pdf-stat-label">${t('employment')}</span>
-                  <span class="pdf-stat-val">${escapeHtml(payload.employmentType || payload.employment_type)}</span>
-                </div>
+              <div class="pdf-stat-item">
+                <i class="fa-solid fa-user-graduate"></i> ${t('employment')}: ${escapeHtml(payload.employmentType || payload.employment_type)}
               </div>
             ` : ''}
             ${(payload.expectedSalary || payload.expected_salary) ? `
-              <div class="pdf-stat-box">
-                <i class="fa-solid fa-wallet"></i>
-                <div>
-                  <span class="pdf-stat-label">${t('salary')}</span>
-                  <span class="pdf-stat-val">${escapeHtml(payload.expectedSalary || payload.expected_salary)}</span>
-                </div>
+              <div class="pdf-stat-item">
+                <i class="fa-solid fa-wallet"></i> ${t('salary')}: ${escapeHtml(payload.expectedSalary || payload.expected_salary)}
               </div>
             ` : ''}
           </div>
@@ -4392,21 +4380,21 @@ function generateResumePdfHtml(payload) {
 
         ${(payload.aboutMe || payload.about_me) ? `
           <div class="pdf-main-section">
-            <div class="pdf-main-title"><i class="fa-solid fa-user"></i> ${t('about_me')}</div>
-            <div class="pdf-main-text">${escapeHtml(payload.aboutMe || payload.about_me)}</div>
+            <div class="pdf-section-title"><i class="fa-solid fa-user"></i> ${t('about_me')}</div>
+            <div class="pdf-about-text">${escapeHtml(payload.aboutMe || payload.about_me)}</div>
           </div>
         ` : ''}
 
         ${workEntries.length ? `
           <div class="pdf-main-section">
-            <div class="pdf-main-title"><i class="fa-solid fa-briefcase"></i> ${t('work_experience')}</div>
-            <div class="pdf-timeline">
+            <div class="pdf-section-title"><i class="fa-solid fa-briefcase"></i> ${t('work_experience')}</div>
+            <div class="pdf-timeline-list">
               ${workEntries.map(w => `
                 <div class="pdf-timeline-item">
-                  <div class="pdf-timeline-date">${escapeHtml(w.dates || '')}</div>
-                  <div class="pdf-timeline-content">
-                    <div class="pdf-timeline-title">${escapeHtml(w.role || '')}</div>
-                    <div class="pdf-timeline-sub">${escapeHtml(w.company || '')}</div>
+                  <div class="pdf-timeline-dates">${escapeHtml(w.dates || '')}</div>
+                  <div class="pdf-timeline-body">
+                    <div class="pdf-timeline-role">${escapeHtml(w.role || '')}</div>
+                    <div class="pdf-timeline-org">${escapeHtml(w.company || '')}</div>
                     ${w.description ? `<div class="pdf-timeline-desc">${escapeHtml(w.description)}</div>` : ''}
                   </div>
                 </div>
@@ -4415,13 +4403,13 @@ function generateResumePdfHtml(payload) {
           </div>
         ` : ((payload.experienceYears || payload.experience_years) && (payload.experienceYears || payload.experience_years) !== 'Tajribasiz' ? `
           <div class="pdf-main-section">
-            <div class="pdf-main-title"><i class="fa-solid fa-briefcase"></i> ${t('work_experience')}</div>
-            <div class="pdf-timeline">
+            <div class="pdf-section-title"><i class="fa-solid fa-briefcase"></i> ${t('work_experience')}</div>
+            <div class="pdf-timeline-list">
               <div class="pdf-timeline-item">
-                <div class="pdf-timeline-date">${t('experience')}: ${escapeHtml(payload.experienceYears || payload.experience_years)}</div>
-                <div class="pdf-timeline-content">
-                  <div class="pdf-timeline-title">${escapeHtml(payload.position || '')}</div>
-                  <div class="pdf-timeline-sub">${escapeHtml(payload.city || 'Toshkent')}</div>
+                <div class="pdf-timeline-dates">${t('experience')}: ${escapeHtml(payload.experienceYears || payload.experience_years)}</div>
+                <div class="pdf-timeline-body">
+                  <div class="pdf-timeline-role">${escapeHtml(payload.position || '')}</div>
+                  <div class="pdf-timeline-org">${escapeHtml(payload.city || 'Toshkent')}</div>
                 </div>
               </div>
             </div>
@@ -4430,14 +4418,14 @@ function generateResumePdfHtml(payload) {
 
         ${eduEntries.length ? `
           <div class="pdf-main-section">
-            <div class="pdf-main-title"><i class="fa-solid fa-graduation-cap"></i> ${t('education')}</div>
-            <div class="pdf-timeline">
+            <div class="pdf-section-title"><i class="fa-solid fa-graduation-cap"></i> ${t('education')}</div>
+            <div class="pdf-timeline-list">
               ${eduEntries.map(e => `
                 <div class="pdf-timeline-item">
-                  <div class="pdf-timeline-date">${escapeHtml(e.dates || '')}</div>
-                  <div class="pdf-timeline-content">
-                    <div class="pdf-timeline-title">${escapeHtml(e.institution || '')}</div>
-                    <div class="pdf-timeline-sub">${escapeHtml(e.degree || '')}</div>
+                  <div class="pdf-timeline-dates">${escapeHtml(e.dates || '')}</div>
+                  <div class="pdf-timeline-body">
+                    <div class="pdf-timeline-role">${escapeHtml(e.institution || '')}</div>
+                    <div class="pdf-timeline-org">${escapeHtml(e.degree || '')}</div>
                   </div>
                 </div>
               `).join('')}
@@ -4447,28 +4435,30 @@ function generateResumePdfHtml(payload) {
 
         ${projectEntries.length ? `
           <div class="pdf-main-section">
-            <div class="pdf-main-title"><i class="fa-solid fa-laptop-code"></i> ${t('key_projects')}</div>
+            <div class="pdf-section-title"><i class="fa-solid fa-laptop-code"></i> ${t('key_projects')}</div>
+            <div class="pdf-projects-list">
             ${projectEntries.map(p => `
               <div class="pdf-project-card">
                 <div class="pdf-project-header">
                   <div class="pdf-project-title">${escapeHtml(p.name)}</div>
-                  ${p.url ? `<div class="pdf-project-link"><i class="fa-solid fa-link"></i> ${escapeHtml(p.url)}</div>` : ''}
+                  ${p.url ? `<div class="pdf-project-url"><i class="fa-solid fa-link"></i> ${escapeHtml(p.url)}</div>` : ''}
                 </div>
                 ${p.desc ? `<div class="pdf-project-desc">${escapeHtml(p.desc)}</div>` : ''}
                 ${p.tags && p.tags.length ? `
-                  <div class="pdf-project-tags">
-                    ${p.tags.map(t => `<span class="pdf-project-tag">${escapeHtml(t)}</span>`).join('')}
+                  <div class="pdf-project-techs">
+                    ${p.tags.map(t => `<span class="pdf-tech-chip">${escapeHtml(t)}</span>`).join('')}
                   </div>
                 ` : ''}
               </div>
             `).join('')}
+            </div>
           </div>
         ` : ''}
 
         ${pData.additionalInfo ? `
           <div class="pdf-main-section">
-            <div class="pdf-main-title"><i class="fa-solid fa-star"></i> ${t('additional_info')}</div>
-            <div class="pdf-main-text">${escapeHtml(pData.additionalInfo)}</div>
+            <div class="pdf-section-title"><i class="fa-solid fa-star"></i> ${t('additional_info')}</div>
+            <div class="pdf-additional-text">${escapeHtml(pData.additionalInfo)}</div>
           </div>
         ` : ''}
       </div>
@@ -4528,7 +4518,10 @@ window.previewResumePdfModal = (payload) => {
       </div>
     </div>
   `;
-  openModal('📄 Professional PDF Rezyume', html);
+  const aiOverlay = document.getElementById('ai-modal-overlay');
+  document.getElementById('ai-modal-title').textContent = '📄 Professional PDF Rezyume';
+  document.getElementById('ai-modal-body').innerHTML = html;
+  aiOverlay.classList.remove('hidden');
 };
 
 window.downloadResumePdfById = (id) => {
@@ -5021,6 +5014,21 @@ async function enhanceTextWithAI(textareaId, btnEl, type = 'resume') {
   }
 }
 
+function openAiModal(title, htmlContent) {
+  const overlay = document.getElementById('ai-modal-overlay');
+  const modalTitle = document.getElementById('ai-modal-title');
+  const modalBody = document.getElementById('ai-modal-body');
+
+  modalTitle.textContent = title;
+  modalBody.innerHTML = htmlContent;
+  overlay.classList.remove('hidden');
+}
+
+function closeAiModal() {
+  const overlay = document.getElementById('ai-modal-overlay');
+  overlay.classList.add('hidden');
+}
+
 function showAiComparisonModal(textareaId, originalText, improvedText) {
   activeAiComparisonData = {
     textareaId,
@@ -5063,7 +5071,7 @@ function showAiComparisonModal(textareaId, originalText, improvedText) {
     </div>
   `;
 
-  openModal("✨ AI Yordamida Yaxshilandi", modalHtml);
+  openAiModal("✨ AI Yordamida Yaxshilandi", modalHtml);
 }
 
 function acceptAiText() {
@@ -5077,13 +5085,13 @@ function acceptAiText() {
     targetEl.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
-  closeModal();
+  closeAiModal();
   activeAiComparisonData = null;
   showToast("Matn AI yordamida muvaffaqiyatli yaxshilandi! ✨", "success");
 }
 
 function closeAiComparisonModal() {
-  closeModal();
+  closeAiModal();
   activeAiComparisonData = null;
 }
 
